@@ -2,9 +2,9 @@
 
 An unfinished but still working complete optimized rewrite of ACS
 
-# Setup
+# Setup with rojo
 
-[Rokit](https://github.com/rojo-rbx/rokit) is used for toolchain managment, you should install it if you dont want to install rojo or blink manually.
+[Rokit](https://github.com/rojo-rbx/rokit) is used for toolchain managment, you should install it if you dont want to install rojo and blink manually.
 
 1. Clone the repository
 2. Run `rokit install` to install blink and rojo
@@ -16,10 +16,10 @@ You have to run `blink main` every time you change `main.blink`, or run `blink m
 
 # Notes
 
-I doubt I will work on this alot anymore, alot of things are unfinished and some parts of the code are ugly/messy.
-Sounds are most likely broken for you, you will have to reupload them yourselves.
-Attachments do work, however they are very unfinished.
-Medical system also works, but is aswell unfinished. There is no current way to heal from injuries right now, so I recommend you disable the medical system.
-Projectiles are multi-threaded and handled on the server, so you _shouldn't_ have any wallbanging cheaters.
-I have not stress tested this system with alot of players at all, I dont know the complete extents of my optimizations or how many players it can handle.
-You should disable the `Debug` config option in the config if you're going to use this in an actual game.
+I doubt I will work on this alot anymore, alot of things are unfinished and some parts of the code are ugly/messy.\
+Sounds are most likely broken for you, you will have to reupload them yourselves.\
+Attachments do work, however they are very unfinished.\
+Medical system also works, but is aswell unfinished. There is no current way to heal from injuries right now, so I recommend you disable the medical system.\
+Projectiles are multi-threaded and handled on the server, so you _shouldn't_ have any wallbanging cheaters.\
+I have not stress tested this system with alot of players at all, I dont know the complete extents of my optimizations or how many players it can handle.\
+You should disable the `Debug` config option in the config if you're going to use this in an actual game.\
