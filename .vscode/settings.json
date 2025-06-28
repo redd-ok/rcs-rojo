@@ -1,0 +1,5 @@
+{
+    "luau-lsp.platform.type": "roblox",
+    "luau-lsp.sourcemap.enabled": true,
+    "luau-lsp.fflags.enableNewSolver": false
+}

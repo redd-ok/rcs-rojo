@@ -1,0 +1,134 @@
+{
+    "name": "rcs-rojo",
+    "tree": {
+        "$className": "DataModel",
+
+        "Workspace": {
+            "$ignoreUnknownInstances": true,
+            "RCS_Workspace": {
+                "$className": "Folder",
+                "$ignoreUnknownInstances": true,
+                "Client": {
+                    "$className": "Folder",
+                    "$ignoreUnknownInstances": true
+                },
+                "Server": {
+                    "$className": "Folder",
+                    "$ignoreUnknownInstances": true
+                }
+            }
+        },
+
+        "Lighting": {
+            "$ignoreUnknownInstances": true,
+            "SuppressionBlur": {
+                "$className": "BlurEffect",
+                "$properties": {
+                    "Size": 0
+                }
+            },
+            "MedicalBlurEffect": {
+                "$className": "BlurEffect",
+                "$properties": {
+                    "Size": 0
+                }
+            },
+            "Flashbang": {
+                "$className": "ColorCorrectionEffect",
+                "$properties": {}
+            },
+            "MedicalColorEffect": {
+                "$className": "ColorCorrectionEffect",
+                "$properties": {}
+            }
+        },
+
+        "ReplicatedStorage": {
+            "RCS": {
+                "$className": "Configuration",
+                "$ignoreUnknownInstances": true,
+                "Animations": {
+                    "$className": "Folder",
+                    "$ignoreUnknownInstances": true
+                },
+                "Attachments": {
+                    "$className": "Folder",
+                    "$ignoreUnknownInstances": true
+                },
+                "FX": {
+                    "$className": "Folder",
+                    "$ignoreUnknownInstances": true,
+                    "Blood": {
+                        "$className": "Folder"
+                    },
+                    "GrenadeVFX": {
+                        "$className": "Folder"
+                    },
+                    "Holes": {
+                        "$className": "Folder"
+                    },
+                    "SFX": {
+                        "$className": "Folder"
+                    },
+                    "Shells": {
+                        "$className": "Folder"
+                    }
+                },
+                "Footsteps": {
+                    "$ignoreUnknownInstances": true,
+                    "$className": "Folder"
+                },
+                "GunModels": {
+                    "$ignoreUnknownInstances": true,
+                    "$className": "Folder"
+                },
+                "Modules": {
+                    "$path": "src/shared"
+                },
+                "RCS_Config": {
+                    "$path": "src/config.luau"
+                },
+                "Types": {
+                    "$path": "src/types.luau"
+                },
+                "ClientNetwork": {
+                    "$path": "src/network/clientNetwork.luau"
+                },
+
+                "Arms": {
+                    "$className": "Model"
+                }
+            }
+        },
+
+        "ServerScriptService": {
+            "RCS_Server": {
+                "$path": "src/server",
+
+                "ServerNetwork": {
+                    "$path": "src/network/serverNetwork.luau"
+                }
+            }
+        },
+
+        "StarterPlayer": {
+            "StarterPlayerScripts": {
+                "$ignoreUnknownInstances": true,
+                "RCS_EventHandler": {
+                    "$path": "src/client/eventHandler.client.luau"
+                },
+                "RCS_Debug": {
+                    "$path": "src/client/debug.client.luau"
+                }
+            },
+            "StarterCharacterScripts": {
+                "RCS_Framework": {
+                    "$path": "src/client/framework"
+                },
+                "Footsteps": {
+                    "$path": "src/client/footsteps.client.luau"
+                }
+            }
+        }
+    }
+}

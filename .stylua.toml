@@ -1,0 +1,5 @@
+line_endings = "Windows"
+indent_type = "Tabs"
+column_width = 80
+indent_width = 4
+syntax = "Luau"

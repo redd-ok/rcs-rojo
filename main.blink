@@ -1,0 +1,165 @@
+option ClientOutput = "src/network/clientNetwork.luau"
+option ServerOutput = "src/network/serverNetwork.luau"
+option Casing = Camel
+
+scope WeaponEvents {
+    event Equip {
+        From: Client,
+        Type: Reliable,
+        Call: SingleSync,
+        Data: Instance(Tool)?
+    }
+
+    event Unequip {
+        From: Client,
+        Type: Reliable,
+        Call: SingleSync
+    }
+
+    event Shoot_CTS {
+        From: Client,
+        Type: Reliable,
+        Call: SingleSync,
+        Data: struct {
+            tool: Instance(Tool)?,
+            position: CFrame<f32, f32>,
+            id: u16,
+        }
+    }
+    event Shoot_STC {
+        From: Server,
+        Type: Reliable,
+        Call: SingleAsync,
+        Data: (
+            Instance(Player)?,
+            struct {
+                tool: Instance(Tool)?,
+                position: CFrame<f32, f32>,
+            }
+        )
+    }
+
+    event ProjectileHit {
+        From: Client,
+        Type: Reliable,
+        Call: SingleSync,
+        Data: struct {
+            hitPart: Instance(BasePart)?,
+            hitCF: CFrame<f32, f32>,
+            id: u32,
+            pen: boolean,
+        }
+    }
+
+    event ToggleAttachment {
+        From: Client,
+        Type: Reliable,
+        Call: SingleSync,
+        Data: set { laser, active }
+    }
+
+    event LoopingSounds_CTS {
+        From: Client,
+        Type: Reliable,
+        Call: SingleSync,
+        Data: boolean
+    }
+    event LoopingSounds_STC {
+        From: Server,
+        Type: Reliable,
+        Call: SingleSync,
+        Data: (Instance(Player)?, boolean)
+    }
+}
+
+scope CharacterEvents {
+    event HeadReplication_CTS {
+        From: Client,
+        Type: Reliable,
+        Call: SingleSync,
+        Data: CFrame<f16, u8>
+    }
+    event HeadReplication_STC {
+        From: Server,
+        Type: Reliable,
+        Call: SingleSync,
+        Data: (Instance(Player)?, CFrame<f16, u8>)
+    }
+
+    event Stance_CTS {
+        From: Client,
+        Type: Reliable,
+        Call: SingleSync,
+        Data: struct {
+            characterStance: enum { Standing, Crouched, Prone },
+            leaningState: enum { NotLeaning, Left, Right },
+            gunStance: enum { Normal, HighReady, LowReady, Patrol }?,
+            sprinting: boolean
+        }
+    }
+    event Stance_STC {
+        From: Server,
+        Type: Reliable,
+        Call: SingleSync,
+        Data: (
+                Instance(Player)?,
+                struct {
+                    characterStance: enum { Standing, Crouched, Prone },
+                    leaningState: enum { NotLeaning, Left, Right },
+                    gunStance: enum { Normal, HighReady, LowReady, Patrol }?,
+                    sprinting: boolean
+                }
+            )
+    }
+
+    event Footstep_CTS {
+        From: Client,
+        Type: Reliable,
+        Call: SingleSync,
+        Data: u8, -- converted from: table.find(Enum.Material:GetEnumItems(), material) :: number
+    }
+    event Footstep_STC {
+        From: Server,
+        Type: Reliable,
+        Call: SingleSync,
+        Data: (
+            Instance(Player)?,
+            u8 -- converted to: Enum.Material:GetEnumItems()[number]
+        )
+    }
+}
+
+event Flashbang {
+    From: Server,
+    Type: Reliable,
+    Call: SingleSync,
+    Data: (vector<f32>, f32)
+}
+
+event MedicalUpdate {
+    From: Server,
+    Type: Reliable,
+    Call: SingleAsync,
+    Data: struct {
+        Dead: boolean,
+        Conscious: boolean,
+
+        Blood: u16,
+
+        Bleeding: u8,
+        Pain: u8,
+
+        Fractured: struct {
+            Leg: struct {
+                ["Left Leg"]: boolean,
+                ["Right Leg"]: boolean
+            },
+            Arm: struct {
+                ["Left Arm"]: boolean,
+                ["Right Arm"]: boolean
+            }
+        },
+
+        Tourniquet: boolean
+    }
+}
