@@ -408,14 +408,31 @@ local function doShoot()
 	task.spawn(Recoil)
 	Shake(0.8)
 
+	States.gunState.ShotCounter += 1
+
 	local id = ProjectileV2:GetId()
+
+	local tracersEnabled = Variables.WeaponData.Tracer
+	local randomTracer = if Variables.WeaponData.RandomTracer.Enabled
+		then math.random() <= Variables.WeaponData.RandomTracer.Chance / 100
+		else false
+	local tracerEveryXShot = not Variables.WeaponData.RandomTracer.Enabled
+		and States.gunState.ShotCounter
+				% Variables.WeaponData.TracerEveryXShots
+			== 0
+	local tracerColor = if tracersEnabled
+			and (randomTracer or tracerEveryXShot)
+		then Variables.WeaponData.TracerColor
+		else nil
+
 	ProjectileV2:Spawn(
 		Variables.WeaponInHand.Handle.Muzzle.WorldCFrame,
 		Projectile:GetCaliber(
 			(Variables.WeaponTool :: Tool):GetAttribute("Caliber") :: string
 		) :: Types.Caliber,
 		LocalPlayer,
-		id
+		id,
+		tracerColor
 	)
 	ClientNetwork.WeaponEvents.Shoot_CTS.fire({
 		id = id,

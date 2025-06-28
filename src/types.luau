@@ -133,6 +133,7 @@ export type GunConfig = {
 		Enabled: boolean,
 		Chance: number,
 	},
+	TracerEveryXShots: number,
 
 	Chambered: boolean,
 }
@@ -155,6 +156,8 @@ export type GunState = {
 	AmmoInGun: number,
 	Ammo: number,
 	StoredAmmo: number,
+
+	ShotCounter: number,
 
 	GunStance: GunStance,
 	Aimpart: number,

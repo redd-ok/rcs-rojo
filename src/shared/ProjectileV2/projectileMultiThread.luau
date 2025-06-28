@@ -187,7 +187,7 @@ function projectileMultiThread:init(actor: Actor, sendMessage: (...any) -> ())
 				caliberData,
 				owner,
 				bulletId,
-				Color3.fromRGB(255, 0, 0)
+				tracerColor
 			)
 		end
 	)
@@ -268,10 +268,10 @@ function projectileMultiThread:parallelStepProjectile(
 						and (projectile.attributes.lastWhizz == nil)
 					then
 						if projectile.attributes.lastWhizz then
-							print(
-								tick()
-									- projectile.attributes.lastWhizz :: number
-							)
+							-- print(
+							-- 	tick()
+							-- 		- projectile.attributes.lastWhizz :: number
+							-- )
 						end
 						shouldDesynchronize = true
 						task.synchronize()

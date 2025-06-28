@@ -20,6 +20,8 @@ local defaultGunState: Types.GunState = {
 	Ammo = 0,
 	StoredAmmo = 0,
 
+	ShotCounter = 0,
+
 	GunStance = "Normal",
 	Aimpart = 1,
 

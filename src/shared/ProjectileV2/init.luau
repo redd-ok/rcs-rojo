@@ -59,7 +59,8 @@ function Projectile:Spawn(
 	startCFrame: CFrame,
 	caliberData: Types.Caliber,
 	owner: Player?,
-	bulletId: number?
+	bulletId: number?,
+	tracerColor: Color3?
 )
 	if Projectile.activeProjectiles > Projectile._maxProjectiles then
 		warn(
@@ -75,7 +76,7 @@ function Projectile:Spawn(
 		caliberData,
 		bulletId,
 		owner,
-		bulletId
+		tracerColor
 	)
 end
 
