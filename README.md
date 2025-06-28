@@ -22,4 +22,4 @@ Attachments do work, however they are very unfinished.\
 Medical system also works, but is aswell unfinished. There is no current way to heal from injuries right now, so I recommend you disable the medical system.\
 Projectiles are multi-threaded and handled on the server, so you _shouldn't_ have any wallbanging cheaters.\
 I have not stress tested this system with alot of players at all, I dont know the complete extents of my optimizations or how many players it can handle.\
-You should disable the `Debug` config option in the config if you're going to use this in an actual game.\
+You should disable the `Debug` config option in the config if you're going to use this in an actual game.
