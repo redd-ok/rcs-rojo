@@ -2,7 +2,7 @@
 
 An unfinished but still working complete optimized rewrite of ACS
 
-## Setup
+# Setup
 
 [Rokit](https://github.com/rojo-rbx/rokit) is used for toolchain managment, you should install it if you dont want to install rojo or blink manually.
 
@@ -14,7 +14,7 @@ An unfinished but still working complete optimized rewrite of ACS
 Now you can open roblox studio, run `rojo serve` and connect via the rojo roblox plugin.
 You have to run `blink main` every time you change `main.blink`, or run `blink main --watch` to have it automatically generate on save.
 
-## Notes
+# Notes
 
 I doubt I will work on this alot anymore, alot of things are unfinished and some parts of the code are ugly/messy.
 Sounds are most likely broken for you, you will have to reupload them yourselves.
