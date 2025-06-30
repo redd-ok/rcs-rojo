@@ -406,6 +406,9 @@ local function doShoot()
 
 	States.gunState.ShootDelay = true
 	task.spawn(Recoil)
+	if Variables.AnimData.ShootAnim then
+		task.spawn(Variables.AnimData.ShootAnim, GetAnimObjs())
+	end
 	Shake(0.8)
 
 	States.gunState.ShotCounter += 1

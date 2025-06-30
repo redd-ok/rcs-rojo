@@ -25,6 +25,7 @@ export type AnimationConfig = {
 	) -> nil,
 	SwitchAimPart: nil | (objs: AnimationsObject, animate: boolean) -> nil,
 	VariableZoom: nil | (objs: AnimationsObject, animate: boolean) -> nil,
+	ShootAnim: nil | (objs: AnimationsObject) -> nil,
 
 	SV_GunPos: CFrame,
 
