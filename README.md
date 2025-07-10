@@ -4,10 +4,10 @@ An unfinished but still working complete optimized rewrite of ACS
 
 # Setup with rojo
 
-[Rokit](https://github.com/rojo-rbx/rokit) is used for toolchain managment, you should install it if you dont want to install rojo and blink manually.
+[Pesde](https://pesde.dev/) is used for toolchain managment, you should install it if you dont want to install rojo and blink manually.
 
 1. Clone the repository
-2. Run `rokit install` to install blink and rojo
+2. Run `pesde install` to install blink and rojo
 3. Run `rojo plugin install` to install a local version of the rojo roblox plugin (alternatively you can install the [toolbox version](https://create.roblox.com/store/asset/13916111004/Rojo))
 4. Run `blink main` to generate the networking code
 

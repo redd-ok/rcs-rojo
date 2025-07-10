@@ -1,0 +1,15 @@
+name = "dder/rcs"
+version = "0.1.0"
+authors = ["dder"]
+license = "MIT"
+private = true
+
+[target]
+environment = "roblox"
+
+[indices]
+default = "https://github.com/pesde-pkg/index"
+
+[dev_dependencies]
+rojo = { name = "pesde/rojo", version = "^7.5.1", target = "lune" }
+blink = { name = "pesde/blink", version = "^0.17.3", target = "lune" }

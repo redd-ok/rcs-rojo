@@ -1,2 +1,6 @@
 sourcemap.json
 src/network
+
+luau_packages
+lune_packages
+pesde.lock
