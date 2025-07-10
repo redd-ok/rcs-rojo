@@ -16,6 +16,14 @@
                     "$className": "Folder",
                     "$ignoreUnknownInstances": true
                 }
+            },
+            "$path": "assets/workspace"
+        },
+
+        "StarterGui": {
+            "$className": "StarterGui",
+            "RCS_Hud": {
+                "$path": "assets/hud.rbxm"
             }
         },
 
@@ -43,44 +51,30 @@
             }
         },
 
+        "StarterPack": {
+            "$path": "assets/tools"
+        },
+
         "ReplicatedStorage": {
             "RCS": {
                 "$className": "Configuration",
                 "$ignoreUnknownInstances": true,
                 "Animations": {
                     "$className": "Folder",
-                    "$ignoreUnknownInstances": true
+                    "$path": "assets/animations"
                 },
                 "Attachments": {
                     "$className": "Folder",
                     "$ignoreUnknownInstances": true
                 },
                 "FX": {
-                    "$className": "Folder",
-                    "$ignoreUnknownInstances": true,
-                    "Blood": {
-                        "$className": "Folder"
-                    },
-                    "GrenadeVFX": {
-                        "$className": "Folder"
-                    },
-                    "Holes": {
-                        "$className": "Folder"
-                    },
-                    "SFX": {
-                        "$className": "Folder"
-                    },
-                    "Shells": {
-                        "$className": "Folder"
-                    }
+                    "$path": "assets/effects.rbxm"
                 },
                 "Footsteps": {
-                    "$ignoreUnknownInstances": true,
-                    "$className": "Folder"
+                    "$path": "assets/footsteps.rbxm"
                 },
                 "GunModels": {
-                    "$ignoreUnknownInstances": true,
-                    "$className": "Folder"
+                    "$path": "assets/models"
                 },
                 "Modules": {
                     "$path": "src/shared"
@@ -96,7 +90,7 @@
                 },
 
                 "Arms": {
-                    "$className": "Model"
+                    "$path": "assets/arms.rbxm"
                 }
             }
         },
@@ -108,6 +102,12 @@
                 "ServerNetwork": {
                     "$path": "src/network/serverNetwork.luau"
                 }
+            }
+        },
+
+        "TextChatService": {
+            "$properties": {
+                "ChatVersion": "TextChatService"
             }
         },
 
@@ -128,6 +128,10 @@
                 "Footsteps": {
                     "$path": "src/client/footsteps.client.luau"
                 }
+            },
+
+            "$properties": {
+                "GameSettingsAvatar": "R6"
             }
         }
     }

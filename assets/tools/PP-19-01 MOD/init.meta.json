@@ -1,0 +1,9 @@
+{
+    "className": "Tool",
+    "properties": {
+        "Attributes": {
+            "Animations": {"String": "PP-19-01"},
+            "Caliber": {"String": "9x19mm"}
+        }
+    }
+}

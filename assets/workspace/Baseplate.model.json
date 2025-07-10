@@ -1,0 +1,32 @@
+{
+    "ClassName": "Part",
+    "Children": [
+        {
+            "ClassName": "Texture",
+            "Properties": {
+                "OffsetStudsU": 0,
+                "OffsetStudsV": 0,
+                "StudsPerTileU": 8,
+                "StudsPerTileV": 8,
+                "Texture": "rbxassetid://6372755229",
+                "Transparency": 0.8,
+                "ZIndex": 1,
+                "Face": "Top"
+            }
+        }
+    ],
+    "Properties": {
+        "CFrame": [
+            0, -8, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1
+        ],
+        "Color": [
+            0.3568627450980392, 0.3568627450980392,
+            0.3568627450980392
+        ],
+        "Material": "Asphalt",
+        "Size": [2048, 16, 2048],
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth",
+        "Anchored": true
+    }
+}
