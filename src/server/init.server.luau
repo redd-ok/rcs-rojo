@@ -140,7 +140,6 @@ function ProjectileV2:ProjectileHit(raycastResult, projectile)
 		end
 
 		if not hitPlayer and humanoid.Health <= 0 and Config.EnableRagdoll then
-			-- RagdollModule:SetupModel(humanoid.Parent)
 			RagdollModule:Ragdoll(humanoid.Parent)
 		end
 	elseif humanoid and math.random() < 0.25 then
@@ -151,107 +150,6 @@ function ProjectileV2:ProjectileHit(raycastResult, projectile)
 		)
 	end
 end
-
--- ServerNetwork.WeaponEvents.ProjectileHit.on(function(player, data)
--- 	-- TODO: improve security
-
--- 	local cal: Types.Caliber
--- 	local _vel = 0
--- 	local initVel = 0
--- 	local activeProjectile
--- 	if ActiveProjectiles[data.id] then
--- 		activeProjectile = ActiveProjectiles[data.id]
-
--- 		cal = Calibers[activeProjectile.Caliber]
-
--- 		initVel = cal.InitialVelocity / 0.28
--- 		local v = activeProjectile.ShotCFrame.LookVector * initVel
-
--- 		local timePassed = tick() - activeProjectile.Time
--- 		_vel = Utilities:CalculateDragGravity(v, cal, timePassed).Magnitude
--- 		--while timePassed > 0 do
--- 		--	v = Utilities:CalculateDragGravity(v, cal, 1/60)
--- 		--	timePassed -= 1/60
--- 		--end
-
--- 		if not data.pen then
--- 			task.cancel(activeProjectile.TimeoutThread)
--- 			ActiveProjectiles[data.id] = nil
--- 		end
--- 	else
--- 		return
--- 	end
-
--- 	if not data.hitPart or not data.hitPart.Parent then
--- 		return
--- 	end
-
--- 	if data.hitPart:IsA("BasePart") then
--- 		print(data.hitPart:GetFullName())
--- 		data.hitPart:ApplyImpulse(
--- 			activeProjectile.ShotCFrame.LookVector * cal.ImpactEnergy * 750,
--- 			data.hitCF.Position
--- 		)
--- 	end
-
--- 	local humanoid = data.hitPart.Parent:FindFirstChildWhichIsA("Humanoid")
--- 		or data.hitPart.Parent
--- 			and data.hitPart.Parent.Parent
--- 			and data.hitPart.Parent.Parent:FindFirstChildWhichIsA("Humanoid")
-
--- 	if humanoid and humanoid.Health > 0 then
--- 		local hitPlayer = Players:GetPlayerFromCharacter(humanoid.Parent)
-
--- 		if Config.AntiTeamKill then
--- 			if hitPlayer and hitPlayer.Team == player.Team then
--- 				return
--- 			end
--- 		end
-
--- 		if Config.MedicalSystem.Enabled then
--- 			MedicalSystem:characterHit(
--- 				data.hitPart,
--- 				data.hitPart.Parent :: Model,
--- 				cal
--- 			)
--- 		else
--- 			if data.hitPart.Name == "Torso" then
--- 				humanoid:TakeDamage(
--- 					Utilities:Random(cal.Damage.Torso.Min, cal.Damage.Torso.Max)
--- 				)
--- 			elseif data.hitPart.Name == "Head" then
--- 				humanoid:TakeDamage(
--- 					Utilities:Random(cal.Damage.Head.Min, cal.Damage.Head.Max)
--- 				)
--- 			else
--- 				humanoid:TakeDamage(
--- 					Utilities:Random(cal.Damage.Limb.Min, cal.Damage.Limb.Max)
--- 				)
--- 			end
--- 		end
-
--- 		if humanoid:FindFirstChild("creator") then
--- 			humanoid.creator:Destroy()
--- 		end
--- 		local creator = Instance.new("ObjectValue")
--- 		creator.Value = player
--- 		creator.Parent = humanoid
--- 		task.delay(5, function()
--- 			creator:Destroy()
--- 		end)
-
--- 		if humanoid and (humanoid.Health <= 0 or math.random() < 0.65) then
--- 			Utilities:BloodSplatter(data.hitCF, cal, humanoid.Parent)
--- 		end
-
--- 		if not hitPlayer and humanoid.Health <= 0 then
--- 			-- RagdollModule:SetupModel(humanoid.Parent)
--- 			RagdollModule:Ragdoll(humanoid.Parent)
--- 		end
--- 	elseif humanoid and math.random() < 0.25 then
--- 		Utilities:BloodSplatter(data.hitCF, cal, humanoid.Parent)
--- 	end
--- end)
 
 ServerNetwork.CharacterEvents.HeadReplication_CTS.on(
 	function(player, neckCFrame)
