@@ -139,7 +139,7 @@ function ProjectileV2:ProjectileHit(raycastResult, projectile)
 			)
 		end
 
-		if not hitPlayer and humanoid.Health <= 0 then
+		if not hitPlayer and humanoid.Health <= 0 and Config.EnableRagdoll then
 			-- RagdollModule:SetupModel(humanoid.Parent)
 			RagdollModule:Ragdoll(humanoid.Parent)
 		end
@@ -324,17 +324,19 @@ end)
 
 Players.PlayerAdded:Connect(function(player)
 	player.CharacterAdded:Connect(function(char)
-		for _, v in char:GetDescendants() do
-			if v:IsA("BasePart") then
-				v.CollisionGroup = "Characters"
+		if Config.EnableRagdoll then
+			for _, v in char:GetDescendants() do
+				if v:IsA("BasePart") then
+					v.CollisionGroup = "Characters"
+				end
 			end
+
+			RagdollModule:SetupModel(char)
+
+			char:WaitForChild("Humanoid").Died:Connect(function()
+				RagdollModule:Ragdoll(char)
+			end)
 		end
-
-		RagdollModule:SetupModel(char)
-
-		char:WaitForChild("Humanoid").Died:Connect(function()
-			RagdollModule:Ragdoll(char)
-		end)
 
 		if Config.MedicalSystem.Enabled then
 			MedicalSystem:registerCharacter(char)

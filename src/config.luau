@@ -12,6 +12,8 @@ return {
 	Debug = true,
 	DebugGUI = Enum.KeyCode.RightShift,
 
+	EnableRagdoll = true,
+
 	AntiTeamKill = false,
 
 	ToggleAim = false,
