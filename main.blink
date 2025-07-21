@@ -16,6 +16,13 @@ scope WeaponEvents {
         Call: SingleSync
     }
 
+    event SetShots {
+        From: Client,
+        Type: Reliable,
+        Call: SingleAsync,
+        Data: u8
+    }
+
     event Shoot_CTS {
         From: Client,
         Type: Reliable,
@@ -26,6 +33,7 @@ scope WeaponEvents {
             id: u16,
         }
     }
+
     event Shoot_STC {
         From: Server,
         Type: Reliable,

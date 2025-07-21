@@ -37,17 +37,21 @@ local NeckCFrames = {}
 
 local function MuzzleFX(WeaponInHand: Types.WeaponInHand)
 	local Handle = WeaponInHand.Handle
+	local Tool = WeaponInHand.Parent and WeaponInHand.Parent:FindFirstChildOfClass("Tool")
+	local Fired = Tool:GetAttribute("ShotsFired") or 2
 	local Muzzle = Handle.Muzzle :: BasePart & {
 		Indoor: Sound,
 		Fire: Sound,
 	}
 
-	if not Muzzle:GetAttribute("LoopingSounds") then
+	if not Tool then return end
+
+	if not Muzzle:GetAttribute("LoopingSounds") or Fired < 2 then
 		if
 			Muzzle:GetAttribute("IndoorSounds")
 			and Utilities:IsIndoors(Muzzle.WorldPosition, {
 				WeaponInHand.Parent :: Model,
-			})
+			}) and Fired > 1
 		then
 			Muzzle.Indoor:Play()
 		else
