@@ -12,7 +12,7 @@ jobs:
       contents: write
     env:
       PESDE_VERSION: '0.6.2'
-      ASSET_NAME: pesde-${{ env.PESDE_VERSION }}-linux-x86_64.zip
+      ASSET_NAME: pesde-0.6.2-linux-x86_64.zip
 
     steps:
       - name: Checkout
@@ -26,16 +26,14 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}/pesde-bin
-          key: pesde-${{ env.PESDE_VERSION }}-linux-x86_64
-          restore-keys: pesde-${{ env.PESDE_VERSION }}-
+          key: pesde-0.6.2-linux-x86_64
+          restore-keys: pesde-0.6.2-
 
       - name: Get Pesde
-        if: "${{ steps.cache-pesde.outputs.cache-hit != 'true' }}"
+        if: ${{ steps.cache-pesde.outputs.cache-hit != 'true' }}
         run: |
           set -euo pipefail
-          export PESDE_VERSION="${PESDE_VERSION}"
-          export ASSET_NAME="${ASSET_NAME}"
-          # Fetch asset ID
+          # Use env vars directly
           ASSET_ID=$(curl -s -f \
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github+json" \
@@ -47,14 +45,12 @@ jobs:
             exit 1
           fi
 
-          # Download the raw zip
           curl -sL -f \
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/octet-stream" \
             https://api.github.com/repos/pesde-pkg/pesde/releases/assets/${ASSET_ID} \
             -o pesde.zip
 
-          # Unzip and validate
           unzip -o pesde.zip -d pesde-bin || { echo "Error: Failed to unzip pesde.zip"; exit 1; }
           if [ ! -f pesde-bin/pesde ]; then
             echo "Error: pesde binary not found in pesde-bin/"
