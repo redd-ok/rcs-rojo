@@ -15,10 +15,12 @@ jobs:
       - name: 📦 Install pesde from release
         run: |
           P_VERSION="0.6.2"
-          curl -L -o pesde.zip "https://github.com/pesde-pkg/pesde/releases/download/v${P_VERSION}/pesde-${P_VERSION}-linux-x86_64.zip"
+          ASSET="pesde-${P_VERSION}-linux-x86_64.zip"
+          curl -L -o pesde.zip "https://github.com/pesde-pkg/pesde/releases/download/v${P_VERSION}/${ASSET}"
           unzip pesde.zip -d pesde-bin
           chmod +x pesde-bin/pesde
           echo "$GITHUB_WORKSPACE/pesde-bin" >> $GITHUB_PATH
+
 
       - name: 📦 Install toolchain with pesde
         run: |
