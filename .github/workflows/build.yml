@@ -70,16 +70,12 @@ jobs:
       - name: Prebuild
         run: |
           set -euo pipefail
-          export PATH="$PATH:$HOME/.pesde/bin"
-          pesde install || { echo "Error: pesde install failed"; exit 1; }
-          ls -a
+          mkdir -p src/network
           blink main || { echo "Error: Prebuild failed"; exit 1; }
 
       - name: Build
         run: |
           set -euo pipefail
-          export PATH="$PATH:$HOME/.pesde/bin"
-          pesde install || { echo "Error: pesde install failed"; exit 1; }
           rojo build --output rcs.rbxlx || { echo "Error: Build failed"; exit 1; }
 
       - name: Create Release and Upload Artifact
