@@ -15,14 +15,13 @@ jobs:
       ASSET_NAME: pesde-0.6.2-linux-x86_64.zip
 
     steps:
+      - uses: ernisto/setup-pesde@latest
+
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
-
-      - name: Get Pesde
-      - uses: lumin-org/setup-pesde@v0.4.1
  
       - name: Prebuild
         run: |
