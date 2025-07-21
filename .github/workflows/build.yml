@@ -9,14 +9,14 @@ jobs:
   build-and-release:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # Required for creating releases and uploading assets
+      contents: write
     env:
-      PESDE_VERSION: '0.6.2'  # Consider making this dynamic or configurable
-      ASSET_NAME: 'pesde-${{ env.PESDE_VERSION }}-linux-x86_64.zip'
+      PESDE_VERSION: '0.6.2'
+      ASSET_NAME: pesde-${{ env.PESDE_VERSION }}-linux-x86_64.zip
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4  # Updated to latest version
+        uses: actions/checkout@v4
 
       - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
@@ -30,15 +30,18 @@ jobs:
           restore-keys: pesde-${{ env.PESDE_VERSION }}-
 
       - name: Get Pesde
-        if: steps.cache-pesde.outputs.cache-hit != 'true'  # Skip if cached
+        if: "${{ steps.cache-pesde.outputs.cache-hit != 'true' }}"
         run: |
+          set -euo pipefail
+          export PESDE_VERSION="${PESDE_VERSION}"
+          export ASSET_NAME="${ASSET_NAME}"
           # Fetch asset ID
           ASSET_ID=$(curl -s -f \
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github+json" \
             https://api.github.com/repos/pesde-pkg/pesde/releases/tags/v${PESDE_VERSION} \
             | jq -r ".assets[] | select(.name==\"${ASSET_NAME}\") | .id")
-          
+
           if [ -z "$ASSET_ID" ]; then
             echo "Error: Asset ${ASSET_NAME} not found for version ${PESDE_VERSION}"
             exit 1
@@ -57,35 +60,38 @@ jobs:
             echo "Error: pesde binary not found in pesde-bin/"
             exit 1
           fi
-          
+
           chmod +x pesde-bin/pesde
           echo "${{ github.workspace }}/pesde-bin" >> $GITHUB_PATH
 
       - name: Install Toolchain with Pesde
         run: |
+          set -euo pipefail
           pesde self-install || { echo "Error: pesde self-install failed"; exit 1; }
           pesde install || { echo "Error: pesde install failed"; exit 1; }
 
       - name: Prebuild
         run: |
+          set -euo pipefail
           blink main || { echo "Error: Prebuild failed"; exit 1; }
 
       - name: Build
-        run: | 
+        run: |
+          set -euo pipefail
           rojo build --output rcs.rbxlx || { echo "Error: Build failed"; exit 1; }
 
       - name: Create Release and Upload Artifact
-        uses: softprops/action-gh-release@v2  # Modern release action
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: auto-${{ github.sha }}
-          name: Auto Build ${{ github.sha:0:7 }}
-          body: Automated build for commit ${{ github.sha:0:7 }}
+          name: Auto Build ${{ github.sha }}
+          body: Automated build for commit ${{ github.sha }}
           prerelease: true
           files: rcs.rbxlx
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Cleanup
-        if: always()  # Run even if previous steps fail
+        if: always()
         run: |
           rm -rf pesde.zip pesde-bin rcs.rbxlx
