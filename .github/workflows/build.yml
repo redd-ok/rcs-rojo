@@ -21,52 +21,9 @@ jobs:
       - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
 
-      - name: Cache Pesde
-        id: cache-pesde
-        uses: actions/cache@v4
-        with:
-          path: ${{ github.workspace }}/pesde-bin
-          key: pesde-0.6.2-linux-x86_64
-          restore-keys: pesde-0.6.2-
-
       - name: Get Pesde
-        if: ${{ steps.cache-pesde.outputs.cache-hit != 'true' }}
-        run: |
-          set -euo pipefail
-          # Use env vars directly
-          ASSET_ID=$(curl -s -f \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Accept: application/vnd.github+json" \
-            https://api.github.com/repos/pesde-pkg/pesde/releases/tags/v${PESDE_VERSION} \
-            | jq -r ".assets[] | select(.name==\"${ASSET_NAME}\") | .id")
-
-          if [ -z "$ASSET_ID" ]; then
-            echo "Error: Asset ${ASSET_NAME} not found for version ${PESDE_VERSION}"
-            exit 1
-          fi
-
-          curl -sL -f \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Accept: application/octet-stream" \
-            https://api.github.com/repos/pesde-pkg/pesde/releases/assets/${ASSET_ID} \
-            -o pesde.zip
-
-          unzip -o pesde.zip -d pesde-bin || { echo "Error: Failed to unzip pesde.zip"; exit 1; }
-          if [ ! -f pesde-bin/pesde ]; then
-            echo "Error: pesde binary not found in pesde-bin/"
-            exit 1
-          fi
-
-          chmod +x pesde-bin/pesde
-          echo "${{ github.workspace }}/pesde-bin" >> $GITHUB_PATH
-
-      - name: Install Toolchain with Pesde
-        run: |
-          set -euo pipefail
-          pesde self-install || { echo "Error: pesde self-install failed"; exit 1; }
-          pesde install || { echo "Error: pesde install failed"; exit 1; }
-          export PATH="$PATH:$HOME/.pesde/bin"
-
+      - uses: lumin-org/setup-pesde@v0.4.1
+ 
       - name: Prebuild
         run: |
           set -euo pipefail
