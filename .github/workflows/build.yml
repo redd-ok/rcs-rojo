@@ -71,6 +71,7 @@ jobs:
         run: |
           set -euo pipefail
           export PATH="$PATH:$HOME/.pesde/bin"
+          ls -a
           blink main || { echo "Error: Prebuild failed"; exit 1; }
 
       - name: Build
