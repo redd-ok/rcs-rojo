@@ -67,10 +67,12 @@ jobs:
           pesde install || { echo "Error: pesde install failed"; exit 1; }
 
       - name: Prebuild
-        run: blink main || { echo "Error: Prebuild failed"; exit 1; }
+        run: |
+          blink main || { echo "Error: Prebuild failed"; exit 1; }
 
       - name: Build
-        run: rojo build --output rcs.rbxlx || { echo "Error: Build failed"; exit 1; }
+        run: | 
+          rojo build --output rcs.rbxlx || { echo "Error: Build failed"; exit 1; }
 
       - name: Create Release and Upload Artifact
         uses: softprops/action-gh-release@v2  # Modern release action
