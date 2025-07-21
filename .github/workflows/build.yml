@@ -1,0 +1,51 @@
+name: BuildCommit
+
+on:
+  push:  # Runs on every commit to any branch
+    branches: ["**"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: InstallPesde
+        run: |
+          curl -sSf https://raw.githubusercontent.com/stravant/pesde/main/install.sh | sh
+          echo "$HOME/.pesde/bin" >> $GITHUB_PATH
+          source ~/.profile
+          pesde install
+
+      - name: GenerateBlink
+        run: |
+          blink main
+
+      - name: BuildProject
+        run: |
+          rojo build --output build.rbxlx
+
+      - name: UploadArtifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rojo-build
+          path: build.rbxlx
+
+      - name: GithubCLI
+        uses: cli/cli-action@v2
+
+      - name: CreateRelease
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Define version as timestamp or commit hash
+          TAG="auto-build-$(date +'%Y%m%d-%H%M%S')"
+          MSG="Automated build for commit ${{ github.sha }}"
+
+          # Create pre-release tag & upload
+          gh release create "$TAG" build.rbxlx \
+            --title "$TAG" \
+            --notes "$MSG" \
+            --prerelease
