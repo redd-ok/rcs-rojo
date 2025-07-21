@@ -65,15 +65,18 @@ jobs:
           set -euo pipefail
           pesde self-install || { echo "Error: pesde self-install failed"; exit 1; }
           pesde install || { echo "Error: pesde install failed"; exit 1; }
+          export PATH="$PATH:$HOME/.pesde/bin"
 
       - name: Prebuild
         run: |
           set -euo pipefail
+          export PATH="$PATH:$HOME/.pesde/bin"
           blink main || { echo "Error: Prebuild failed"; exit 1; }
 
       - name: Build
         run: |
           set -euo pipefail
+          export PATH="$PATH:$HOME/.pesde/bin"
           rojo build --output rcs.rbxlx || { echo "Error: Build failed"; exit 1; }
 
       - name: Create Release and Upload Artifact
