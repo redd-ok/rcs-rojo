@@ -83,9 +83,9 @@ jobs:
       - name: Create Release and Upload Artifact
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: auto-${{ github.sha:0:7 }}
-          name: Auto Build ${{ github.sha:0:7 }}
-          body: Automated build for commit ${{ github.sha:0:7 }}
+          tag_name: auto-${{ github.sha }}
+          name: Auto Build ${{ github.sha }}
+          body: Automated build for commit ${{ github.sha }}
           prerelease: true
           files: rcs.rbxlx
         env:
