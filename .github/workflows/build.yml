@@ -1,7 +1,7 @@
-name: BuildCommit
+name: Build and Pre-Release Rojo Project
 
 on:
-  push:  # Runs on every commit to any branch
+  push:
     branches: ["**"]
 
 jobs:
@@ -9,43 +9,48 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: 🧾 Checkout repository
         uses: actions/checkout@v3
 
-      - name: InstallPesde
+      - name: 📦 Install pesde from release
         run: |
-          curl -sSf https://raw.githubusercontent.com/stravant/pesde/main/install.sh | sh
-          echo "$HOME/.pesde/bin" >> $GITHUB_PATH
-          source ~/.profile
+          P_VERSION="0.6.2"
+          curl -L -o pesde.zip "https://github.com/pesde-pkg/pesde/releases/download/v${P_VERSION}/pesde-${P_VERSION}-linux-x86_64.zip"
+          unzip pesde.zip -d pesde-bin
+          chmod +x pesde-bin/pesde
+          echo "$GITHUB_WORKSPACE/pesde-bin" >> $GITHUB_PATH
+
+      - name: 📦 Install toolchain with pesde
+        run: |
+          pesde self-install
           pesde install
 
-      - name: GenerateBlink
+      - name: 🟡 Run blink main
+        run: blink main
+
+      - name: 🔨 Build Rojo project
+        run: rojo build --output build.rbxlx
+
+      - name: 🛠️ Install GitHub CLI
         run: |
-          blink main
+          sudo apt update
+          sudo apt install -y gh
 
-      - name: BuildProject
-        run: |
-          rojo build --output build.rbxlx
-
-      - name: UploadArtifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: rojo-build
-          path: build.rbxlx
-
-      - name: GithubCLI
-        uses: cli/cli-action@v2
-
-      - name: CreateRelease
+      - name: 🔐 Authenticate GitHub CLI
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Define version as timestamp or commit hash
-          TAG="auto-build-$(date +'%Y%m%d-%H%M%S')"
-          MSG="Automated build for commit ${{ github.sha }}"
+          echo "$GITHUB_TOKEN" | gh auth login --with-token
 
-          # Create pre-release tag & upload
+      - name: 🚀 Create Pre-release with build.rbxlx
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="auto-${{ github.sha }}"
+          TITLE="Auto Build: $TAG"
+          NOTES="Automated pre-release for commit ${{ github.sha }}"
+
           gh release create "$TAG" build.rbxlx \
-            --title "$TAG" \
-            --notes "$MSG" \
+            --title "$TITLE" \
+            --notes "$NOTES" \
             --prerelease
