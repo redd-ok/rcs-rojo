@@ -65,7 +65,7 @@ local function PlaySFX(sfx: string, _loudness: number?)
 	end)
 end
 
-local function LoopingSounds(start, weaponconfig)
+local function LoopingSounds(start)
 	if not Variables.Viewmodel or not Variables.WeaponInHand then
 		return
 	end
