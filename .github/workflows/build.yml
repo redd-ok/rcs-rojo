@@ -70,20 +70,22 @@ jobs:
       - name: Prebuild
         run: |
           set -euo pipefail
+          export PATH="$PATH:$HOME/.pesde/bin"
           mkdir -p src/network
           blink main || { echo "Error: Prebuild failed"; exit 1; }
 
       - name: Build
         run: |
           set -euo pipefail
+          export PATH="$PATH:$HOME/.pesde/bin"
           rojo build --output rcs.rbxlx || { echo "Error: Build failed"; exit 1; }
 
       - name: Create Release and Upload Artifact
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: auto-${{ github.sha }}
-          name: Auto Build ${{ github.sha }}
-          body: Automated build for commit ${{ github.sha }}
+          tag_name: auto-${{ github.sha:0:7 }}
+          name: Auto Build ${{ github.sha:0:7 }}
+          body: Automated build for commit ${{ github.sha:0:7 }}
           prerelease: true
           files: rcs.rbxlx
         env:
