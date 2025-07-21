@@ -1,58 +1,89 @@
-name: Build and Pre-Release Rojo Project
+name: Build Pre-release
 
 on:
   push:
-    branches: ["**"]
+    branches:
+      - master
 
 jobs:
-  build:
+  build-and-release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Required for creating releases and uploading assets
+    env:
+      PESDE_VERSION: '0.6.2'  # Consider making this dynamic or configurable
+      ASSET_NAME: 'pesde-${{ env.PESDE_VERSION }}-linux-x86_64.zip'
 
     steps:
-      - name: 🧾 Checkout repository
-        uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4  # Updated to latest version
 
-      - name: 📦 Install pesde from release
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Cache Pesde
+        id: cache-pesde
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/pesde-bin
+          key: pesde-${{ env.PESDE_VERSION }}-linux-x86_64
+          restore-keys: pesde-${{ env.PESDE_VERSION }}-
+
+      - name: Get Pesde
+        if: steps.cache-pesde.outputs.cache-hit != 'true'  # Skip if cached
         run: |
-          P_VERSION="0.6.2"
-          ASSET="pesde-${P_VERSION}-linux-x86_64.zip"
-          curl -L -o pesde.zip "https://github.com/pesde-pkg/pesde/releases/download/v${P_VERSION}/${ASSET}"
-          unzip pesde.zip -d pesde-bin
+          # Fetch asset ID
+          ASSET_ID=$(curl -s -f \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/pesde-pkg/pesde/releases/tags/v${PESDE_VERSION} \
+            | jq -r ".assets[] | select(.name==\"${ASSET_NAME}\") | .id")
+          
+          if [ -z "$ASSET_ID" ]; then
+            echo "Error: Asset ${ASSET_NAME} not found for version ${PESDE_VERSION}"
+            exit 1
+          fi
+
+          # Download the raw zip
+          curl -sL -f \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/octet-stream" \
+            https://api.github.com/repos/pesde-pkg/pesde/releases/assets/${ASSET_ID} \
+            -o pesde.zip
+
+          # Unzip and validate
+          unzip -o pesde.zip -d pesde-bin || { echo "Error: Failed to unzip pesde.zip"; exit 1; }
+          if [ ! -f pesde-bin/pesde ]; then
+            echo "Error: pesde binary not found in pesde-bin/"
+            exit 1
+          fi
+          
           chmod +x pesde-bin/pesde
-          echo "$GITHUB_WORKSPACE/pesde-bin" >> $GITHUB_PATH
+          echo "${{ github.workspace }}/pesde-bin" >> $GITHUB_PATH
 
-
-      - name: 📦 Install toolchain with pesde
+      - name: Install Toolchain with Pesde
         run: |
-          pesde self-install
-          pesde install
+          pesde self-install || { echo "Error: pesde self-install failed"; exit 1; }
+          pesde install || { echo "Error: pesde install failed"; exit 1; }
 
-      - name: 🟡 Run blink main
-        run: blink main
+      - name: Prebuild
+        run: blink main || { echo "Error: Prebuild failed"; exit 1; }
 
-      - name: 🔨 Build Rojo project
-        run: rojo build --output build.rbxlx
+      - name: Build
+        run: rojo build --output rcs.rbxlx || { echo "Error: Build failed"; exit 1; }
 
-      - name: 🛠️ Install GitHub CLI
-        run: |
-          sudo apt update
-          sudo apt install -y gh
-
-      - name: 🔐 Authenticate GitHub CLI
+      - name: Create Release and Upload Artifact
+        uses: softprops/action-gh-release@v2  # Modern release action
+        with:
+          tag_name: auto-${{ github.sha }}
+          name: Auto Build ${{ github.sha:0:7 }}
+          body: Automated build for commit ${{ github.sha:0:7 }}
+          prerelease: true
+          files: rcs.rbxlx
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo "$GITHUB_TOKEN" | gh auth login --with-token
 
-      - name: 🚀 Create Pre-release with build.rbxlx
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Cleanup
+        if: always()  # Run even if previous steps fail
         run: |
-          TAG="auto-${{ github.sha }}"
-          TITLE="Auto Build: $TAG"
-          NOTES="Automated pre-release for commit ${{ github.sha }}"
-
-          gh release create "$TAG" build.rbxlx \
-            --title "$TITLE" \
-            --notes "$NOTES" \
-            --prerelease
+          rm -rf pesde.zip pesde-bin rcs.rbxlx
