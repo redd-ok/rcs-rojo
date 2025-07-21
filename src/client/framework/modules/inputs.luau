@@ -93,12 +93,15 @@ local Inputs: {
 			end
 
 			if Variables.WeaponData.Firemode == 3 then
+				local Shots = 0
 				States.gunState.Shooting = inputState == "began"
 				Misc.LoopingSounds(States.gunState.Shooting)
 
 				while
 					States.gunState.Shooting and Variables.WeaponData.Chambered
 				do
+					Shots += 1
+					ClientNetwork.WeaponEvents.SetShots.fire(Shots)
 					Misc.doShoot()
 				end
 
@@ -114,17 +117,21 @@ local Inputs: {
 			elseif
 				Variables.WeaponData.Firemode == 2 and inputState == "began"
 			then
+				local Shots = 0
 				Misc.LoopingSounds(true)
 				for _ = 1, Variables.WeaponData.BurstShot do
+					Shots += 1
+					ClientNetwork.WeaponEvents.SetShots.fire(Shots)
 					Misc.doShoot()
 				end
-				Misc.LoopingSounds(false)
+					Misc.LoopingSounds(false)
 			elseif inputState == "began" then
 				Misc.LoopingSounds(true)
 				task.delay((60 / Variables.WeaponData.ShootRate), function()
 					Misc.LoopingSounds(false)
 				end)
 				Misc.doShoot()
+				ClientNetwork.WeaponEvents.SetShots.fire(1)
 				-- Misc.LoopingSounds(false)
 			end
 		end,

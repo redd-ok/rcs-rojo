@@ -275,19 +275,20 @@ local function Recoil()
 end
 
 local function MuzzleFX()
-	if not Variables.WeaponInHand or not Variables.WeaponData then
+	if not Variables.WeaponInHand or not Variables.WeaponData or not Variables.WeaponTool then
 		return
 	end
 	local Handle = Variables.WeaponInHand.Handle
+	local ShotsFired = Variables.WeaponTool:GetAttribute("ShotsFired") or 2
 	local Muzzle = Handle.Muzzle
 
-	if not Muzzle:GetAttribute("LoopingSounds") then
+	if not Muzzle:GetAttribute("LoopingSounds") or ShotsFired < 2 then
 		if
 			Muzzle:GetAttribute("IndoorSounds")
 			and Utilities:IsIndoors(Muzzle.WorldPosition, {
 				Character,
 				workspace.CurrentCamera,
-			})
+			}) and ShotsFired < 2
 		then
 			Muzzle.Indoor:Play()
 		else
