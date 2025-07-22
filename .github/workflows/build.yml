@@ -15,7 +15,8 @@ jobs:
       ASSET_NAME: pesde-0.6.2-linux-x86_64.zip
 
     steps:
-      - uses: ernisto/setup-pesde@v0.4.2-dev.1
+      - name: Setup Pesde
+        uses: ernisto/setup-pesde@v0.4.2-dev.1
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -27,6 +28,7 @@ jobs:
         run: |
           set -euo pipefail
           export PATH="$PATH:$HOME/.pesde/bin"
+          pesde install
           mkdir -p src/network
           blink main || { echo "Error: Prebuild failed"; exit 1; }
 
