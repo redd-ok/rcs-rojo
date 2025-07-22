@@ -16,7 +16,7 @@ jobs:
 
     steps:
       - name: Setup Pesde
-        uses: ernisto/setup-pesde@v0.4.2-dev.1
+        uses: lumin-org/setup-pesde@v0.4.1
 
       - name: Checkout
         uses: actions/checkout@v4
