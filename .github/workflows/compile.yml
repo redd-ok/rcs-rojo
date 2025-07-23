@@ -32,6 +32,8 @@ jobs:
 
       - name: Install Dependencies
         run: |
+          rokit trust rojo-rbx/rojo
+          rokit trust 1Axen/blink
           rokit add rojo-rbx/rojo --global
           rokit add 1Axen/blink --global
           rokit install --no-trust-check
