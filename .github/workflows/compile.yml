@@ -30,9 +30,9 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          rokit add rojo
-          rokit add blink
-          rokit install
+          rokit add rojo-rbx/rojo --global
+          rokit add 1Axen/blink --global
+          rokit install --no-trust-check
 
       - name: Prebuild steps
         run: |
