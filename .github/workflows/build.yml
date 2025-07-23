@@ -10,9 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    env:
-      PESDE_VERSION: '0.6.2+registry.0.2.2'
-      ASSET_NAME: pesde-0.6.2-linux-x86_64.zip
 
     steps:
       - name: Setup Pesde
@@ -52,4 +49,4 @@ jobs:
       - name: Cleanup
         if: always()
         run: |
-          rm -rf pesde.zip pesde-bin rcs.rbxlx
+          rm -rf pesde-bin rcs.rbxlx
