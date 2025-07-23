@@ -48,6 +48,12 @@ jobs:
           mkdir -p build
           rojo build -o build/rcs.rbxl
 
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: compiled
+          path: build/rcs.rbxl
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
