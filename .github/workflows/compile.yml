@@ -1,4 +1,4 @@
-name: Build & Release Roblox Place
+name: Build & Release
 
 on:
   workflow_dispatch:
@@ -24,8 +24,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Rokit
-        run:
-          curl -sSf https://raw.githubusercontent.com/rojo-rbx/rokit/main/scripts/install.sh | bash
+        run: curl -sSf https://raw.githubusercontent.com/rojo-rbx/rokit/main/scripts/install.sh | bash
 
       - name: Install Dependencies
         run: |
@@ -34,11 +33,13 @@ jobs:
 
       - name: Prebuild steps
         run: |
+          mkdir -p src/network
           blink main
 
       - name: Compile Roblox Place
         run: |
-          rojo build -o build/${{ github.event.inputs.version }}.rbxl
+          mkdir -p build
+          rojo build -o build/rcs.rbxl
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
@@ -47,6 +48,6 @@ jobs:
           name: ${{ github.event.inputs.version }}
           body: ${{ github.event.inputs.description }}
           prerelease: ${{ github.event.inputs.prerelease }}
-          files: build/Place.rbxl
+          files: build/rcs.rbxl
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
