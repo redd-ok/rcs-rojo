@@ -56,5 +56,4 @@ If you want to contribute, your best bet for testing is live sync, so you don't 
 7. Connect to the Rojo server from the Rojo plugin.
 
 ## Contributing
-
 Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
