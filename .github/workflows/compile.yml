@@ -1,0 +1,66 @@
+name: Build & Release
+env:
+  GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g. v1.2.3)'
+        required: true
+      prerelease:
+        description: 'Is this a pre-release? (true/false)'
+        required: true
+        default: 'true'
+      description:
+        description: 'Release description'
+        required: false
+        default: ''
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Rokit
+        run: |
+          curl -sSf https://raw.githubusercontent.com/rojo-rbx/rokit/main/scripts/install.sh | bash
+          echo "$HOME/.rokit/bin" >> $GITHUB_PATH
+
+      - name: Install Dependencies
+        run: |
+          rokit trust rojo-rbx/rojo
+          rokit trust 1Axen/blink
+          rokit add rojo-rbx/rojo --global
+          rokit add 1Axen/blink --global
+          rokit install --no-trust-check
+
+      - name: Prebuild steps
+        run: |
+          mkdir -p src/network
+          blink main
+
+      - name: Compile Roblox Place
+        run: |
+          mkdir -p build
+          rojo build -o build/rcs.rbxl
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: compiled
+          path: build/rcs.rbxl
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.version }}
+          name: ${{ github.event.inputs.version }}
+          body: ${{ github.event.inputs.description }}
+          prerelease: ${{ github.event.inputs.prerelease }}
+          files: build/rcs.rbxl
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
