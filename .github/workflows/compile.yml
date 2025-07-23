@@ -30,8 +30,9 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          rokit install -g rojo
-          rokit install -g blink
+          rokit add rojo
+          rokit add blink
+          rokit install
 
       - name: Prebuild steps
         run: |
