@@ -1,4 +1,6 @@
 name: Build & Release
+env:
+  GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
 
 on:
   workflow_dispatch:
