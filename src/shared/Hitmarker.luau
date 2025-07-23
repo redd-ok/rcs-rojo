@@ -193,6 +193,7 @@ function Hitmarker.HitEffect(
 		part.Transparency = 1
 		part.Color = Color3.new(0, 0, 0)
 		part.CanCollide = false
+		part.CanTouch = false
 		part.Material = Enum.Material.Fabric --Enum.Material.Air
 
 		local hs = MatFolder.HoleSize
