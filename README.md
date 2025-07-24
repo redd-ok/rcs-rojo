@@ -8,12 +8,12 @@ An unfinished but working, optimized rewrite of ACS.
 
 To test out the latest commits, you'll need to compile RCS yourself.
 
-[Pesde](https://pesde.dev/) is used for toolchain management. You should install it if you don't want to install Rojo and/or Blink manually.
+[Rokit](https://github.com/rojo-rbx/rokit) is used for toolchain management. You should install it if you don't want to install Rojo and/or Blink manually.
 
 1. Clone the repository and enter the repo directory.
 2. Run:
    ```sh
-   pesde install
+   rokit install
    ```
    to install Blink and Rojo.
 3. Run:
@@ -29,12 +29,12 @@ To test out the latest commits, you'll need to compile RCS yourself.
 
 ## Live Sync
 
-If you want to contribute, your best bet for testing is live sync, so you don't have to compile every time you change a file. As before, you'll need [Pesde](https://pesde.dev/).
+If you want to contribute, your best bet for testing is live sync, so you don't have to compile every time you change a file. As before, you'll need [Rokit](https://github.com/rojo-rbx/rokit).
 
 1. Clone the repository and enter the repo directory.
 2. Run:
    ```sh
-   pesde install
+   rokit install
    ```
 3. Run:
    ```sh
