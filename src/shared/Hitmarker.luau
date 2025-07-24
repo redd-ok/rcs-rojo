@@ -219,7 +219,7 @@ function Hitmarker.HitEffect(
 		b.Part1 = Hitpart
 
 		debug.profileend()
-		part.Parent = BulletModel
+		part.Parent = workspace.RCS_Workspace.Client
 	end
 
 	-- particles
