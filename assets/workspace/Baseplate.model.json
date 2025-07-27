@@ -11,7 +11,8 @@
                 "Texture": "rbxassetid://6372755229",
                 "Transparency": 0.8,
                 "ZIndex": 1,
-                "Face": "Top"
+                "Face": "Top",
+                "Color3": [0, 0, 0]
             }
         }
     ],

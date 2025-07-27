@@ -48,6 +48,14 @@
             "MedicalColorEffect": {
                 "$className": "ColorCorrectionEffect",
                 "$properties": {}
+            },
+
+            "$path": "assets/lighting"
+        },
+
+        "MaterialService": {
+            "$properties": {
+                "Use2022Materials": true
             }
         },
 

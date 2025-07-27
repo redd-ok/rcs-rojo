@@ -1,0 +1,8 @@
+{
+    "ClassName": "SunRaysEffect",
+    "Properties": {
+        "Enabled": true,
+        "Intensity": 0.034,
+        "Spread": 0.172
+    }
+}

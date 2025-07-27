@@ -1,0 +1,17 @@
+{
+    "ClassName": "Sky",
+    "Properties": {
+        "CelestialBodiesShown": false,
+        "MoonAngularSize": 11,
+        "MoonTextureId": "rbxasset://sky/moon.jpg",
+        "SkyboxBk": "http://www.roblox.com/asset/?id=225469390",
+        "SkyboxDn": "http://www.roblox.com/asset/?id=225469395",
+        "SkyboxFt": "http://www.roblox.com/asset/?id=225469403",
+        "SkyboxLf": "http://www.roblox.com/asset/?id=225469450",
+        "SkyboxRt": "http://www.roblox.com/asset/?id=225469471",
+        "SkyboxUp": "http://www.roblox.com/asset/?id=225469481",
+        "StarCount": 3000,
+        "SunAngularSize": 21,
+        "SunTextureId": "rbxasset://sky/jun.jpg"
+    }
+}
