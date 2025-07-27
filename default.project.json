@@ -4,6 +4,7 @@
         "$className": "DataModel",
 
         "Workspace": {
+            "$className": "Workspace",
             "$ignoreUnknownInstances": true,
             "RCS_Workspace": {
                 "$className": "Folder",
