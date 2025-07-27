@@ -9,12 +9,11 @@ local Modules = Engine:WaitForChild("Modules")
 local ClientNetwork = require(Engine:WaitForChild("ClientNetwork"))
 local Config = require(Engine:WaitForChild("RCS_Config"))
 local Types = require(Engine:WaitForChild("Types"))
+local Calibers = require(Engine:WaitForChild("Calibers"))
 
 local Utilities = require(Modules:WaitForChild("Utilities"))
 local Hitmarker = require(Modules:WaitForChild("Hitmarker"))
 local Spring = require(Modules:WaitForChild("Spring"))
-local Projectile = require(Modules:WaitForChild("Projectile"))
--- Projectile:AllocateProjectiles(Config.ProjectileAllocation)
 local ProjectileV2 = require(Modules:WaitForChild("ProjectileV2"))
 
 local Hud = Players.LocalPlayer.PlayerGui:WaitForChild("RCS_Hud")
@@ -37,21 +36,25 @@ local NeckCFrames = {}
 
 local function MuzzleFX(WeaponInHand: Types.WeaponInHand)
 	local Handle = WeaponInHand.Handle
-	local Tool = WeaponInHand.Parent and WeaponInHand.Parent:FindFirstChildOfClass("Tool")
+	local Tool = WeaponInHand.Parent
+		and WeaponInHand.Parent:FindFirstChildOfClass("Tool")
 	local Fired = Tool:GetAttribute("ShotsFired") or 2
 	local Muzzle = Handle.Muzzle :: BasePart & {
 		Indoor: Sound,
 		Fire: Sound,
 	}
 
-	if not Tool then return end
+	if not Tool then
+		return
+	end
 
 	if not Muzzle:GetAttribute("LoopingSounds") or Fired < 2 then
 		if
 			Muzzle:GetAttribute("IndoorSounds")
 			and Utilities:IsIndoors(Muzzle.WorldPosition, {
 				WeaponInHand.Parent :: Model,
-			}) and Fired > 1
+			})
+			and Fired > 1
 		then
 			Muzzle.Indoor:Play()
 		else
@@ -262,7 +265,7 @@ ClientNetwork.WeaponEvents.Shoot_STC.on(function(owner, data)
 		-- )
 		ProjectileV2:Spawn(
 			data.position,
-			Projectile:GetCaliber(data.tool:GetAttribute("Caliber") :: string) :: Types.Caliber,
+			Calibers[data.tool:GetAttribute("Caliber")],
 			owner
 		)
 
@@ -690,8 +693,6 @@ ClientNetwork.MedicalUpdate.on(function(_medInfo)
 end)
 
 game:GetService("RunService").PostSimulation:Connect(function(deltaTime)
-	Projectile:Step(deltaTime)
-
 	for neck, data in NeckCFrames do
 		local started: number = data[3]
 

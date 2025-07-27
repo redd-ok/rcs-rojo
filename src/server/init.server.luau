@@ -6,6 +6,7 @@ local Engine = game:GetService("ReplicatedStorage").RCS
 
 local Config = require(Engine.RCS_Config)
 local Types = require(Engine.Types)
+local Calibers = require(Engine.Calibers)
 
 local ServerNetwork = require(script.ServerNetwork)
 
@@ -14,7 +15,6 @@ local GunModels = Engine.GunModels
 local Animations = Engine.Animations
 
 local Utilities = require(Modules.Utilities)
-local Calibers = require(Modules.Projectile.Calibers)
 local RagdollModule = require(Modules.Ragdoll)
 local ProjectileV2 = require(Modules.ProjectileV2)
 

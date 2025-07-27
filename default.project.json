@@ -93,6 +93,9 @@
                 "Types": {
                     "$path": "src/types.luau"
                 },
+                "Calibers": {
+                    "$path": "src/calibers.luau"
+                },
                 "ClientNetwork": {
                     "$path": "src/network/clientNetwork.luau"
                 },

@@ -7,12 +7,12 @@ local Engine = ReplicatedStorage.RCS
 
 local ClientNetwork = require(ReplicatedStorage.RCS.ClientNetwork)
 local Types = require(Engine.Types)
+local Calibers = require(Engine:WaitForChild("Calibers"))
 
 local Modules = Engine:WaitForChild("Modules")
 local FX = Engine:WaitForChild("FX")
 
 local Utilities = require(Modules:WaitForChild("Utilities"))
-local Projectile = require(Modules:WaitForChild("Projectile"))
 local ProjectileV2 = require(Modules:WaitForChild("ProjectileV2"))
 
 local States = require(script.Parent.states)
@@ -275,7 +275,11 @@ local function Recoil()
 end
 
 local function MuzzleFX()
-	if not Variables.WeaponInHand or not Variables.WeaponData or not Variables.WeaponTool then
+	if
+		not Variables.WeaponInHand
+		or not Variables.WeaponData
+		or not Variables.WeaponTool
+	then
 		return
 	end
 	local Handle = Variables.WeaponInHand.Handle
@@ -288,7 +292,8 @@ local function MuzzleFX()
 			and Utilities:IsIndoors(Muzzle.WorldPosition, {
 				Character,
 				workspace.CurrentCamera,
-			}) and ShotsFired < 2
+			})
+			and ShotsFired < 2
 		then
 			Muzzle.Indoor:Play()
 		else
@@ -431,9 +436,7 @@ local function doShoot()
 
 	ProjectileV2:Spawn(
 		Variables.WeaponInHand.Handle.Muzzle.WorldCFrame,
-		Projectile:GetCaliber(
-			(Variables.WeaponTool :: Tool):GetAttribute("Caliber") :: string
-		) :: Types.Caliber,
+		Calibers[(Variables.WeaponTool :: Tool):GetAttribute("Caliber")],
 		LocalPlayer,
 		id,
 		tracerColor
