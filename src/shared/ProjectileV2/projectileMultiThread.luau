@@ -16,8 +16,9 @@ local VERY_FAR_CFRAME = CFrame.new(2 ^ 24, 2 ^ 24, 2 ^ 24)
 
 local DebugContainer
 if IsClient then
-	DebugContainer =
-		workspace.RCS_Workspace.Client:FindFirstChild("__DEBUG_CONTAINER")
+	DebugContainer = workspace
+		:FindFirstChild("RCS_Workspace").Client
+		:FindFirstChild("__DEBUG_CONTAINER")
 	if not DebugContainer then
 		DebugContainer = Instance.new("Folder", workspace.RCS_Workspace.Client)
 		DebugContainer.Name = "__DEBUG_CONTAINER"
@@ -121,7 +122,6 @@ function projectileMultiThread:spawnProjectile(
 				tracerColor
 			)
 			if IsClient and tracerColor then
-				-- local part = projectileMultiThread.cachedInstances[index]
 				local projectile =
 					projectileMultiThread.activeProjectiles[index]
 
@@ -181,7 +181,6 @@ function projectileMultiThread:init(actor: Actor, sendMessage: (...any) -> ())
 			owner: Player?,
 			tracerColor: Color3?
 		)
-			-- actor:SetAttribute("used", called)
 			projectileMultiThread:spawnProjectile(
 				initialCFrame,
 				caliberData,
@@ -267,12 +266,6 @@ function projectileMultiThread:parallelStepProjectile(
 						distFromCamera < 15
 						and (projectile.attributes.lastWhizz == nil)
 					then
-						if projectile.attributes.lastWhizz then
-							-- print(
-							-- 	tick()
-							-- 		- projectile.attributes.lastWhizz :: number
-							-- )
-						end
 						shouldDesynchronize = true
 						task.synchronize()
 						projectile.attributes.lastWhizz = tick()
@@ -354,7 +347,6 @@ function projectileMultiThread:parallelStepProjectile(
 			local T2 = tick()
 			local P2 =
 				workspace.CurrentCamera.CFrame:PointToObjectSpace(oldPosition)
-			-- workspace.CurrentCamera.CFrame:ToObjectSpace(oldPosition)
 			local V2
 			if BulletParticleData.T0 then
 				V2 = 2
@@ -376,7 +368,6 @@ function projectileMultiThread:parallelStepProjectile(
 			local M0 = BulletParticleData.V0.Magnitude
 			local M1 = BulletParticleData.V1.Magnitude
 
-			-- task.synchronize()
 			BulletParticleData.SetTo[BulletParticleData.Attachment0] = {
 				WorldPosition = workspace.CurrentCamera.CFrame
 					* BulletParticleData.P0,
@@ -429,8 +420,6 @@ function projectileMultiThread:parallelStepProjectile(
 					Transparency = NumberSequence.new(Tr),
 				}
 			end
-
-			-- task.desynchronize()
 		end
 
 		if shouldDesynchronize then
@@ -474,12 +463,6 @@ end
 function projectileMultiThread:parallelStepped(dt: number)
 	local instances = {}
 	local cframes = {}
-
-	-- task.synchronize()
-	-- raycastParams.FilterDescendantsInstances = {
-	-- 	workspace.CurrentCamera,
-	-- }
-	-- task.desynchronize()
 
 	local toRenderDebug = {}
 	local expired = {}
@@ -595,9 +578,6 @@ function projectileMultiThread:parallelStepped(dt: number)
 				textLabel.Size = UDim2.fromScale(1, 1)
 				billboard.Parent = DebugContainer
 				billboard.Adornee = workspace.Terrain
-
-				-- Debris:AddItem(billboard, 60)
-				-- Debris:AddItem(adornment, 60)
 			else
 				local adornment = Instance.new("LineHandleAdornment")
 				adornment.AlwaysOnTop = true
@@ -607,8 +587,6 @@ function projectileMultiThread:parallelStepped(dt: number)
 				adornment.ZIndex = 1
 				adornment.Parent = DebugContainer
 				adornment.Adornee = workspace.Terrain
-
-				-- Debris:AddItem(adornment, 60)
 			end
 		end
 	end
