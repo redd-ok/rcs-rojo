@@ -433,6 +433,7 @@ function projectileMultiThread:parallelStepProjectile(
 		then {
 			workspace.CurrentCamera,
 			workspace.RCS_Workspace.Client,
+			workspace.RCS_Workspace.Server,
 			if projectile.owner then projectile.owner.Character else nil,
 		}
 		else {
