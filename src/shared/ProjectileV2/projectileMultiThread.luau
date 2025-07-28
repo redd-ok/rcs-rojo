@@ -440,8 +440,33 @@ function projectileMultiThread:parallelStepProjectile(
 			if projectile.owner then projectile.owner.Character else nil,
 		})
 
-	local raycastResult =
-		workspace:Raycast(oldPosition, newPosition - oldPosition, raycastParams)
+	local raycastResult
+	while true do
+		raycastResult = workspace:Raycast(
+			oldPosition,
+			newPosition - oldPosition,
+			raycastParams
+		)
+
+		if
+			raycastResult
+			and raycastResult.Instance.Parent
+			and (
+				raycastResult.Instance.Parent.IsA("Hat")
+				or raycastResult.Instance.Parent:IsA("Accessory")
+				or (
+					raycastResult.Instance.Parent:FindFirstChildWhichIsA(
+						"Humanoid"
+					)
+					and raycastResult.Instance.Name == "HumanoidRootPart"
+				)
+			)
+		then
+			raycastParams:AddToFilter(raycastResult.Instance)
+		else
+			break
+		end
+	end
 
 	if raycastResult then
 		return {
