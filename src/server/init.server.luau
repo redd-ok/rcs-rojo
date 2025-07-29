@@ -186,7 +186,7 @@ ServerNetwork.CharacterEvents.Footstep_CTS.on(function(player, matId)
 
 	local list = {}
 	for i, v in Players:GetPlayers() do
-		if v.Character and v.Character.PrimaryPart then
+		if v ~= player and v.Character and v.Character.PrimaryPart then
 			local TargetPrimaryPart = v.Character.PrimaryPart
 
 			if

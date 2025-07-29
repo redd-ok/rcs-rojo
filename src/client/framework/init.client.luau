@@ -29,7 +29,7 @@ local LocalPlayer = game:GetService("Players").LocalPlayer
 local Character = LocalPlayer.Character
 local Humanoid: Humanoid = Character:WaitForChild("Humanoid")
 local HumanoidRootPart: BasePart & { RootJoint: Motor6D } =
-	Character:FindFirstChild("HumanoidRootPart")
+	Character:WaitForChild("HumanoidRootPart")
 
 local Hud = LocalPlayer.PlayerGui.RCS_Hud
 
