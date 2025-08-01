@@ -56,19 +56,6 @@ ServerNetwork.WeaponEvents.Unequip.on(function(player)
 	}
 end)
 
-ServerNetwork.WeaponEvents.SetShots.on(function(player, shots)
-	if not player.Character or not player.Character.PrimaryPart then
-		return
-	end
-
-	local tool = player.Character:FindFirstChildWhichIsA("Tool")
-	if not tool then
-		return
-	end
-
-	tool:SetAttribute("ShotsFired", shots)
-end)
-
 ServerNetwork.WeaponEvents.Shoot_CTS.on(function(player, data)
 	ProjectileV2:Spawn(
 		data.position,

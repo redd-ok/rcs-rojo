@@ -65,15 +65,33 @@ local function PlaySFX(sfx: string, _loudness: number?)
 	end)
 end
 
-local function LoopingSounds(start)
-	if not Variables.Viewmodel or not Variables.WeaponInHand then
+local function HasLoopingSounds(instance: Instance)
+	return (
+		instance:FindFirstChild("Loop")
+		or instance:FindFirstChild("LoopTail")
+		or instance:FindFirstChild("IndoorLoop")
+		or instance:FindFirstChild("IndoorLoopTail")
+	) ~= nil
+end
+local function HasSingleSounds(instance: Instance)
+	return (
+		instance:FindFirstChild("Fire") or instance:FindFirstChild("Indoor")
+	) ~= nil
+end
+
+local function LoopingSounds(start, isSemi: boolean)
+	if
+		not Variables.Viewmodel
+		or not Variables.WeaponInHand
+		or not Variables.WeaponData
+	then
 		return
 	end
 
 	local Handle = Variables.WeaponInHand.Handle
 	local Muzzle = Handle.Muzzle
 
-	if not Muzzle:GetAttribute("LoopingSounds") then
+	if not HasLoopingSounds(Muzzle) or isSemi and HasSingleSounds(Muzzle) then
 		return
 	end
 
@@ -81,33 +99,31 @@ local function LoopingSounds(start)
 
 	if start then
 		if
-			Muzzle:GetAttribute("IndoorSounds")
-			and Utilities:IsIndoors(Muzzle.WorldPosition, {
+			Utilities:IsIndoors(Muzzle.WorldPosition, {
 				Character,
 				workspace.CurrentCamera,
-			})
+			}) and Muzzle:FindFirstChild("IndoorLoop")
 		then
 			Muzzle.IndoorLoop.Playing = true
-		else
+		elseif Muzzle:FindFirstChild("Loop") then
 			Muzzle.Loop.Playing = true
 		end
 	else
 		Muzzle.Loop.Playing = false
-
-		if Muzzle:GetAttribute("IndoorSounds") then
-			Muzzle.IndoorLoop.Playing = false
-			if
-				Utilities:IsIndoors(Muzzle.WorldPosition, {
-					Character,
-					workspace.CurrentCamera,
-				})
-			then
-				Muzzle.IndoorLoopTail:Play()
-				return
-			end
+		Muzzle.IndoorLoop.Playing = false
+		if
+			Utilities:IsIndoors(Muzzle.WorldPosition, {
+				Character,
+				workspace.CurrentCamera,
+			}) and Muzzle:FindFirstChild("IndoorLoopTail")
+		then
+			Muzzle.IndoorLoopTail:Play()
+			return
 		end
 
-		Muzzle.LoopTail:Play()
+		if Muzzle:FindFirstChild("LoopTail") then
+			Muzzle.LoopTail:Play()
+		end
 	end
 end
 
@@ -155,7 +171,7 @@ local function RunCheck()
 
 	if States.characterState.Running then
 		if States.gunState.Shooting then
-			LoopingSounds(false)
+			LoopingSounds(false, false)
 		end
 
 		States.gunState.Shooting = false
@@ -274,7 +290,7 @@ local function Recoil()
 	)
 end
 
-local function MuzzleFX()
+local function MuzzleFX(isSemi: boolean)
 	if
 		not Variables.WeaponInHand
 		or not Variables.WeaponData
@@ -283,20 +299,17 @@ local function MuzzleFX()
 		return
 	end
 	local Handle = Variables.WeaponInHand.Handle
-	local ShotsFired = Variables.WeaponTool:GetAttribute("ShotsFired") or 2
 	local Muzzle = Handle.Muzzle
 
-	if not Muzzle:GetAttribute("LoopingSounds") or ShotsFired < 2 then
+	if not HasLoopingSounds(Muzzle) or isSemi then
 		if
-			Muzzle:GetAttribute("IndoorSounds")
-			and Utilities:IsIndoors(Muzzle.WorldPosition, {
+			Utilities:IsIndoors(Muzzle.WorldPosition, {
 				Character,
 				workspace.CurrentCamera,
-			})
-			and ShotsFired < 2
+			}) and Muzzle:FindFirstChild("Indoor")
 		then
 			Muzzle.Indoor:Play()
-		else
+		elseif Muzzle:FindFirstChild("Fire") then
 			Muzzle.Fire:Play()
 		end
 	end
@@ -401,7 +414,7 @@ local function ADSMesh()
 	end
 end
 
-local function doShoot()
+local function DoShoot(isSemi: boolean)
 	if
 		not Variables.WeaponInHand
 		or not Variables.WeaponData
@@ -454,7 +467,7 @@ local function doShoot()
 		Variables.WeaponData.Chambered = false
 	end
 
-	MuzzleFX()
+	MuzzleFX(isSemi)
 
 	if
 		Variables.WeaponData.Firemode == 4
@@ -477,5 +490,5 @@ return {
 	Recoil = Recoil,
 	MuzzleFX = MuzzleFX,
 	ADSMesh = ADSMesh,
-	doShoot = doShoot,
+	DoShoot = DoShoot,
 }
