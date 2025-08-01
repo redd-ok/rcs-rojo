@@ -195,6 +195,8 @@ export type Caliber = {
 	ImpactEnergy: number,
 	HoleSize: number,
 
+	TracerSize: number,
+
 	SuppressionAmount: number,
 
 	Damage: {

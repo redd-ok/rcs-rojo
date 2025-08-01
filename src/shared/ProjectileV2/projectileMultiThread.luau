@@ -146,7 +146,7 @@ function projectileMultiThread:spawnProjectile(
 					Effects = { tracerInstances[3] },
 					SetTo = {},
 					MotionBlur = true,
-					BulletSize = 0.7,
+					BulletSize = caliberData.TracerSize,
 					BulletBloom = 0.006,
 					BulletBrightness = 400,
 				}

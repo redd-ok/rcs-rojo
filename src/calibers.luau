@@ -13,6 +13,8 @@ local Calibers = {
 
 		SuppressionAmount = 0.85,
 
+		TracerSize = 0.2,
+
 		Damage = {
 			Limb = {
 				Min = 22,
@@ -39,6 +41,8 @@ local Calibers = {
 		HoleSize = 0.56,
 
 		SuppressionAmount = 0.7,
+
+		TracerSize = 0.2,
 
 		Damage = {
 			Limb = {
@@ -68,6 +72,8 @@ local Calibers = {
 
 		SuppressionAmount = 0.7,
 
+		TracerSize = 0.2,
+
 		Damage = {
 			Limb = {
 				Min = 22,
@@ -93,6 +99,8 @@ local Calibers = {
 
 		ImpactEnergy = 0.418,
 		HoleSize = 0.901,
+
+		TracerSize = 0.03,
 
 		SuppressionAmount = 0.25,
 
