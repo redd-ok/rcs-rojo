@@ -14,6 +14,10 @@ local IsClient = RunService:IsClient()
 
 local VERY_FAR_CFRAME = CFrame.new(2 ^ 24, 2 ^ 24, 2 ^ 24)
 
+local function ReflectNormal(vec: Vector3, normal: Vector3): Vector3
+	return vec.Unit - normal.Unit * 2 * vec.Unit:Dot(normal.Unit)
+end
+
 local DebugContainer
 if IsClient then
 	DebugContainer = workspace
@@ -216,6 +220,7 @@ function projectileMultiThread:parallelStepProjectile(
 	hit: RaycastResult,
 	hitPosition: Vector3,
 	bulletPosition: Vector3,
+	type: ("ricochet" | "pen")?,
 } | {
 	expired: false?,
 	hit: false,
@@ -224,13 +229,15 @@ function projectileMultiThread:parallelStepProjectile(
 }
 	if not workspace:GetAttribute("DISABLE_PROJECTILE_LIFETIME_DECAY") then
 		if
-			tick() - projectile.timeCreated > Config.ProjectileMaximumLifetime
+			tick() - projectile.lastUpdated > Config.ProjectileMaximumLifetime
 		then
 			return {
 				expired = true,
 			}
 		end
 	end
+
+	local caliber = projectile.caliberData
 
 	local oldPosition = projectile.currentPosition
 	local newPosition = projectile:getPosition()
@@ -239,7 +246,7 @@ function projectileMultiThread:parallelStepProjectile(
 
 	if not workspace:GetAttribute("DISABLE_PROJECTILE_DISTANCE_DECAY") then
 		if
-			(newPosition - projectile.initialCFrame.Position).Magnitude
+			(newPosition - projectile.currentPosition).Magnitude
 			> Config.ProjectileMaximumDistance
 		then
 			return {
@@ -453,7 +460,7 @@ function projectileMultiThread:parallelStepProjectile(
 			raycastResult
 			and raycastResult.Instance.Parent
 			and (
-				raycastResult.Instance.Parent.IsA("Hat")
+				raycastResult.Instance.Parent:IsA("Hat")
 				or raycastResult.Instance.Parent:IsA("Accessory")
 				or (
 					raycastResult.Instance.Parent:FindFirstChildWhichIsA(
@@ -470,6 +477,34 @@ function projectileMultiThread:parallelStepProjectile(
 	end
 
 	if raycastResult then
+		local kineticEnergy = 0.5
+			* caliber.Mass
+			* (currentVelocity.Magnitude * 0.28) ^ 2
+
+		local grazeAngle = math.pi / 2
+			- math.acos(
+				math.abs(currentVelocity.Unit:Dot(raycastResult.Normal.Unit))
+			)
+
+		if grazeAngle < math.rad(20) and kineticEnergy > 50 then
+			local reflectedVelocity =
+				ReflectNormal(currentVelocity.Unit, raycastResult.Normal)
+
+			projectile:setVelocity(
+				reflectedVelocity * (currentVelocity.Magnitude * 0.9)
+			)
+			projectile:setPosition(raycastResult.Position + reflectedVelocity)
+
+			return {
+				hit = raycastResult,
+				expired = false,
+				hitPosition = raycastResult.Position,
+				bulletPosition = oldPosition,
+				hitInst = raycastResult.Instance,
+				type = "ricochet",
+			}
+		end
+
 		return {
 			hit = raycastResult,
 			expired = true,
@@ -505,13 +540,21 @@ function projectileMultiThread:parallelStepped(dt: number)
 		end
 		if result.hit then
 			projectileMultiThread:projectileHit(result.hit, v)
-			if DEBUG and IsClient then
-				toRenderDebug[#toRenderDebug + 1] = {
-					hit = true,
-					pos1 = result.bulletPosition,
-					pos2 = result.hitPosition,
-					inst = result.hitInst,
-				}
+			if IsClient then
+				if not result.expired then
+					cframes[#cframes + 1] =
+						CFrame.new(result.bulletPosition, result.hitPosition)
+				end
+
+				if DEBUG then
+					toRenderDebug[#toRenderDebug + 1] = {
+						hit = true,
+						pos1 = result.bulletPosition,
+						pos2 = result.hitPosition,
+						inst = result.hitInst,
+						type = result.type,
+					}
+				end
 			end
 		end
 
@@ -535,7 +578,7 @@ function projectileMultiThread:parallelStepped(dt: number)
 
 			projectileMultiThread.activeProjectiles[i] = nil
 			projectileMultiThread:projectileDestroying(v)
-		elseif IsClient then
+		elseif IsClient and not result.hit then
 			cframes[#cframes + 1] =
 				CFrame.new(result.oldPosition, result.newPosition)
 			if DEBUG and IsClient then
@@ -578,7 +621,9 @@ function projectileMultiThread:parallelStepped(dt: number)
 				adornment.AlwaysOnTop = true
 				adornment.CFrame = CFrame.new(v.pos1, v.pos2)
 				adornment.Length = (v.pos2 - v.pos1).Magnitude
-				adornment.Color3 = Color3.new(0, 10, 0)
+				adornment.Color3 = if v.type ~= nil
+					then Color3.new(10, 10, 0)
+					else Color3.new(0, 10, 0)
 				adornment.ZIndex = 1
 				adornment.Parent = DebugContainer
 				adornment.Adornee = workspace.Terrain
@@ -591,7 +636,11 @@ function projectileMultiThread:parallelStepped(dt: number)
 				local textLabel = Instance.new("TextLabel", billboard)
 				textLabel.BackgroundTransparency = 1
 				textLabel.Text = string.format(
-					"Result: %s(%d, %d, %d)",
+					"%s: %s(%d, %d, %d)",
+					if v.type == "ricochet"
+						then "Ricochet"
+						elseif v.type == "pen" then "Penetration"
+						else "Hit",
 					v.inst.Name,
 					v.pos2.X,
 					v.pos2.Y,

@@ -160,16 +160,16 @@ function Hitmarker.HitEffect(
 	local Attachment = CreateAttachment(HitCF)
 	local MatFolder = GetMatFolder(Mat.Name, Hitpart)
 
+	local bulletSpeed, initialVelocity =
+		Proj:getVelocity().Magnitude, Proj.caliberData.InitialVelocity / 0.28
+
 	-- bullet hole size per caliber
-	local HSMult = Proj.caliberData.HoleSize
-			* (Proj:getVelocity().Magnitude / (Proj.caliberData.InitialVelocity / 0.28))
-		or Proj:getVelocity().Magnitude
-			/ (Proj.caliberData.InitialVelocity / 0.28)
+	local HSMult = Proj.caliberData.HoleSize * (bulletSpeed / initialVelocity)
+		or bulletSpeed / initialVelocity
 
 	local EnergyMult = Proj.caliberData.ImpactEnergy
-			* (Proj:getVelocity().Magnitude / (Proj.caliberData.InitialVelocity / 0.28))
-		or Proj:getVelocity().Magnitude
-			/ (Proj.caliberData.InitialVelocity / 0.28)
+			* (bulletSpeed / initialVelocity)
+		or bulletSpeed / initialVelocity
 	local EMcrt = EnergyMult ^ (1 / 3)
 	local EMsqrt = math.sqrt(EnergyMult)
 
