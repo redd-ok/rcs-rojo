@@ -494,10 +494,10 @@ function projectileMultiThread:parallelStepProjectile(
 
 			local energyLoss = Config.RicochetMaterialEnergyLoss[raycastResult.Material]
 				or Config.RicochetMaterialEnergyLoss.Default
-			projectile:setVelocity(
-				reflectedVelocity
-					* (currentVelocity.Magnitude * (1 - energyLoss))
-			)
+			local remainingEnergy = kineticEnergy * (1 - energyLoss)
+			local newSpeed = math.sqrt((2 * remainingEnergy) / caliber.Mass)
+
+			projectile:setVelocity(reflectedVelocity * newSpeed)
 			projectile:setPosition(raycastResult.Position + reflectedVelocity)
 
 			return {

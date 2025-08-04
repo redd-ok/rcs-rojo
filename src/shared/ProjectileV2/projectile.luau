@@ -69,20 +69,12 @@ end
 function projectile:getVelocity(): Vector3
 	local initVelocity = self.currentVelocity.Magnitude
 		* self.currentVelocity.Unit
+
+	local timeElapsed = (tick() - self.lastUpdated)
+	local timeScale = workspace:GetAttribute("PROJECTILE_SIMULATION_TIME_SCALE")
+		or 1
 	return initVelocity
-		+ Vector3.new(
-			0,
-			-GetGravity()
-				* (
-					(tick() - self.lastUpdated)
-					* (
-						workspace:GetAttribute(
-							"PROJECTILE_SIMULATION_TIME_SCALE"
-						) or 1
-					)
-				),
-			0
-		)
+		+ Vector3.new(0, -GetGravity() * (timeElapsed * timeScale), 0)
 end
 
 function projectile:getPosition(): Vector3
