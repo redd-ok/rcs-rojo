@@ -480,7 +480,6 @@ function projectileMultiThread:parallelStepProjectile(
 
 	if raycastResult then
 		local kineticEnergy = 0.5 * caliber.Mass * currentVelocity.Magnitude ^ 2
-		print(kineticEnergy)
 
 		local grazeAngle = math.pi / 2
 			- math.acos(
