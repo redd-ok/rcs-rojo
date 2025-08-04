@@ -19,6 +19,29 @@ return {
 	ToggleAim = false,
 	ToggleLean = false,
 
+	RicochetMaterialMaxAngle = {
+		Default = 5,
+
+		[Enum.Material.Wood] = 1,
+		[Enum.Material.WoodPlanks] = 1,
+
+		[Enum.Material.Metal] = 15,
+		[Enum.Material.DiamondPlate] = 15,
+		[Enum.Material.CorrodedMetal] = 15,
+
+		[Enum.Material.Grass] = 3,
+		[Enum.Material.LeafyGrass] = 3,
+		[Enum.Material.Ground] = 3,
+		[Enum.Material.Sand] = 3,
+
+		[Enum.Material.Mud] = 0,
+		[Enum.Material.Snow] = 0,
+		[Enum.Material.Fabric] = 0,
+	},
+	RicochetMaterialEnergyLoss = {
+		Default = 0.35,
+	},
+
 	Stamina = {
 		MaxStamina = 100,
 		MaxArmStamina = 100,

@@ -486,12 +486,17 @@ function projectileMultiThread:parallelStepProjectile(
 				math.abs(currentVelocity.Unit:Dot(raycastResult.Normal.Unit))
 			)
 
-		if grazeAngle < math.rad(20) and kineticEnergy > 50 then
+		local maxAngle = Config.RicochetMaterialMaxAngle[raycastResult.Material]
+			or Config.RicochetMaterialMaxAngle.Default
+		if grazeAngle < math.rad(maxAngle) and kineticEnergy > 50 then
 			local reflectedVelocity =
 				ReflectNormal(currentVelocity.Unit, raycastResult.Normal)
 
+			local energyLoss = Config.RicochetMaterialEnergyLoss[raycastResult.Material]
+				or Config.RicochetMaterialEnergyLoss.Default
 			projectile:setVelocity(
-				reflectedVelocity * (currentVelocity.Magnitude * 0.9)
+				reflectedVelocity
+					* (currentVelocity.Magnitude * (1 - energyLoss))
 			)
 			projectile:setPosition(raycastResult.Position + reflectedVelocity)
 
