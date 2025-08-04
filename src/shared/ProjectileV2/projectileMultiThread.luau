@@ -6,6 +6,8 @@ local Engine = game:GetService("ReplicatedStorage").RCS
 local Types = require(Engine.Types)
 local Config = require(Engine.RCS_Config)
 
+local Utilities = require(Engine.Modules.Utilities)
+
 local Projectile = require(script.Parent.projectile)
 type Projectile = Projectile.Projectile
 
@@ -477,9 +479,8 @@ function projectileMultiThread:parallelStepProjectile(
 	end
 
 	if raycastResult then
-		local kineticEnergy = 0.5
-			* caliber.Mass
-			* (currentVelocity.Magnitude * 0.28) ^ 2
+		local kineticEnergy = 0.5 * caliber.Mass * currentVelocity.Magnitude ^ 2
+		print(kineticEnergy)
 
 		local grazeAngle = math.pi / 2
 			- math.acos(
@@ -508,6 +509,43 @@ function projectileMultiThread:parallelStepProjectile(
 				hitInst = raycastResult.Instance,
 				type = "ricochet",
 			}
+		else
+			local energyCost = Config.SpecialNamesPenetrationEnergyCost[raycastResult.Instance.Name]
+				or Config.MaterialPenetrationEnergyCost[raycastResult.Material]
+				or Config.MaterialPenetrationEnergyCost.Default
+
+			local maxPenetrationDepth = kineticEnergy / energyCost
+
+			local result = Utilities:FindExitPoint(
+				raycastResult.Position,
+				currentVelocity.Unit,
+				raycastResult.Instance,
+				maxPenetrationDepth
+			)
+
+			if result and result.thickness * 1000 <= maxPenetrationDepth then
+				local remainingEnergy = kineticEnergy
+					- (result.thickness * energyCost)
+				local newSpeed = math.sqrt((2 * remainingEnergy) / caliber.Mass)
+
+				projectile:setVelocity(currentVelocity.Unit * newSpeed)
+				projectile:setPosition(
+					result.raycastResult.Position
+						- (
+							currentVelocity.Unit
+							* math.min(0.1, result.thickness)
+						)
+				)
+
+				return {
+					hit = raycastResult,
+					expired = false,
+					hitPosition = raycastResult.Position,
+					bulletPosition = oldPosition,
+					hitInst = raycastResult.Instance,
+					type = "pen",
+				}
+			end
 		end
 
 		return {

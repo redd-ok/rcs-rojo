@@ -135,16 +135,19 @@ end
 function Utilities:FindExitPoint(
 	startPosition: Vector3,
 	startDirection: Vector3,
-	object: BasePart
+	object: BasePart,
+	maxDistance: number?
 ): {
 	raycastResult: RaycastResult,
 	thickness: number,
 }?
+	maxDistance = maxDistance or 9999
+
 	local Params = RaycastParams.new()
 	Params.FilterType = Enum.RaycastFilterType.Include
-	Params.FilterDescendantsInstances = { object }
+	Params:AddToFilter(object)
 
-	local dir = startDirection * 9999
+	local dir = startDirection * (maxDistance :: number)
 
 	local rayResult = workspace:Raycast(startPosition + dir, -dir * 1.1, Params)
 
