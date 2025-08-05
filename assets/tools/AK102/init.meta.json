@@ -2,8 +2,10 @@
     "className": "Tool",
     "properties": {
         "Attributes": {
-            "Animations": {"String": "AK"},
-            "Caliber": {"String": "5.56x45mm"}
+            "Animations": { "String": "AK" },
+            "Caliber": {
+                "String": "5.56x45mm M855A1"
+            }
         }
     }
 }

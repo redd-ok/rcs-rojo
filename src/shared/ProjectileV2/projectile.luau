@@ -49,8 +49,7 @@ function projectile.new(
 	caliberData,
 	bulletId,
 	internalId,
-	owner,
-	tracerColor
+	owner
 ): Projectile
 	return setmetatable({
 		currentPosition = initialCFrame.Position,
@@ -61,7 +60,6 @@ function projectile.new(
 		bulletId = bulletId,
 		internalId = internalId,
 		owner = owner,
-		tracerColor = tracerColor,
 		attributes = {},
 	}, projectile)
 end

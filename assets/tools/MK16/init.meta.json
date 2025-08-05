@@ -2,8 +2,8 @@
     "className": "Tool",
     "properties": {
         "Attributes": {
-            "Animations": {"String": "SCAR"},
-            "Caliber": {"String": "5.56x45mm"}
+            "Animations": { "String": "SCAR" },
+            "Caliber": { "String": "5.56x45mm M855A1" }
         }
     }
 }

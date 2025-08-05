@@ -1,10 +1,10 @@
 local Engine = game:GetService("ReplicatedStorage").RCS
 
-local Types = require(Engine.Types)
 local Config = require(Engine.RCS_Config)
 
 local Modules = Engine.Modules
 
+local Utilities = require(Modules:WaitForChild("Utilities"))
 local MultiThread = require(Modules:WaitForChild("MultiThread"))
 local ProjectileClass = require(script:WaitForChild("projectile"))
 export type Projectile = ProjectileClass.Projectile
@@ -21,7 +21,8 @@ function Projectile:ProjectileDestroying(
 end
 function Projectile:ProjectileHit(
 	raycastResult: RaycastResult,
-	projectile: ProjectileClass.Projectile
+	projectile: ProjectileClass.Projectile,
+	projectileVelocity: Vector3
 )
 end
 
@@ -35,10 +36,11 @@ Projectile.MultiThread = MultiThread.new(
 				setmetatable(projectile, { __index = ProjectileClass })
 			)
 		elseif msg == "hit" then
-			local raycastResult, projectile = ...
+			local raycastResult, projectile, velocity = ...
 			Projectile:ProjectileHit(
 				raycastResult,
-				setmetatable(projectile, { __index = ProjectileClass })
+				setmetatable(projectile, { __index = ProjectileClass }),
+				velocity
 			)
 		elseif msg == "suppress" then
 			_G.Suppress(...)
@@ -57,10 +59,9 @@ end
 
 function Projectile:Spawn(
 	startCFrame: CFrame,
-	caliberData: Types.Caliber,
+	caliberName: string,
 	owner: Player?,
-	bulletId: number?,
-	tracerColor: Color3?
+	bulletId: number?
 )
 	if Projectile.activeProjectiles > Projectile._maxProjectiles then
 		warn(
@@ -73,10 +74,9 @@ function Projectile:Spawn(
 	Projectile.MultiThread:SendMessage(
 		"spawn",
 		startCFrame,
-		caliberData,
+		Utilities:FindProjectileConfig(caliberName),
 		bulletId,
-		owner,
-		tracerColor
+		owner
 	)
 end
 

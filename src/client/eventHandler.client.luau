@@ -9,7 +9,6 @@ local Modules = Engine:WaitForChild("Modules")
 local ClientNetwork = require(Engine:WaitForChild("ClientNetwork"))
 local Config = require(Engine:WaitForChild("RCS_Config"))
 local Types = require(Engine:WaitForChild("Types"))
-local Calibers = require(Engine:WaitForChild("Calibers"))
 
 local Utilities = require(Modules:WaitForChild("Utilities"))
 local Hitmarker = require(Modules:WaitForChild("Hitmarker"))
@@ -84,7 +83,7 @@ ClientNetwork.WeaponEvents.Shoot_STC.on(function(owner, data)
 	if owner and owner.Character and data.tool then
 		ProjectileV2:Spawn(
 			data.position,
-			Calibers[data.tool:GetAttribute("Caliber")],
+			data.tool:GetAttribute("Caliber"),
 			owner
 		)
 

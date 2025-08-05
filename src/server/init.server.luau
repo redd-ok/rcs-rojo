@@ -6,7 +6,6 @@ local Engine = game:GetService("ReplicatedStorage").RCS
 
 local Config = require(Engine.RCS_Config)
 local Types = require(Engine.Types)
-local Calibers = require(Engine.Calibers)
 
 local ServerNetwork = require(script.ServerNetwork)
 
@@ -57,11 +56,7 @@ ServerNetwork.WeaponEvents.Unequip.on(function(player)
 end)
 
 ServerNetwork.WeaponEvents.Shoot_CTS.on(function(player, data)
-	ProjectileV2:Spawn(
-		data.position,
-		Calibers[data.tool:GetAttribute("Caliber") :: string] :: Types.Caliber,
-		player
-	)
+	ProjectileV2:Spawn(data.position, data.tool:GetAttribute("Caliber"), player)
 
 	ServerNetwork.WeaponEvents.Shoot_STC.fireExcept(player, player, {
 		id = data.id,
@@ -70,10 +65,23 @@ ServerNetwork.WeaponEvents.Shoot_CTS.on(function(player, data)
 	})
 end)
 
-function ProjectileV2:ProjectileHit(raycastResult, projectile)
+function ProjectileV2:ProjectileHit(
+	raycastResult,
+	projectile,
+	projectileVelocity
+)
 	if not raycastResult.Instance or not raycastResult.Instance.Parent then
 		return
 	end
+
+	local caliber = projectile.caliberData
+	local initialKineticEnergy = 0.5
+		* caliber.Mass
+		* caliber.InitialVelocity ^ 2
+	local kineticEnergy = 0.5 * caliber.Mass * projectileVelocity.Magnitude ^ 2
+	local damageModifier = if Config.DamageFallOff
+		then kineticEnergy / initialKineticEnergy
+		else 0
 
 	local humanoid = raycastResult.Instance.Parent:FindFirstChildWhichIsA(
 		"Humanoid"
@@ -102,21 +110,21 @@ function ProjectileV2:ProjectileHit(raycastResult, projectile)
 					Utilities:Random(
 						projectile.caliberData.Damage.Torso.Min,
 						projectile.caliberData.Damage.Torso.Max
-					)
+					) * damageModifier
 				)
 			elseif raycastResult.Instance.Name == "Head" then
 				humanoid:TakeDamage(
 					Utilities:Random(
 						projectile.caliberData.Damage.Head.Min,
 						projectile.caliberData.Damage.Head.Max
-					)
+					) * damageModifier
 				)
 			else
 				humanoid:TakeDamage(
 					Utilities:Random(
 						projectile.caliberData.Damage.Limb.Min,
 						projectile.caliberData.Damage.Limb.Max
-					)
+					) * damageModifier
 				)
 			end
 		end

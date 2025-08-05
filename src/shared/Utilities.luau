@@ -1,4 +1,5 @@
 local Types = require(game:GetService("ReplicatedStorage").RCS.Types)
+local Calibers = require(game:GetService("ReplicatedStorage").RCS.Calibers)
 local FX = game:GetService("ReplicatedStorage").RCS:WaitForChild("FX")
 
 local Utilities = {}
@@ -278,6 +279,24 @@ function Utilities:BloodSplatter(hitCF: CFrame, cal: Types.Caliber, char: Model)
 
 		game:GetService("Debris"):AddItem(splatter, 30)
 	end
+end
+
+function Utilities:FindProjectileConfig(projectileName: string): Types.Caliber
+	local calibers_flattened: {
+		[string]: Types.Caliber,
+	} = {}
+
+	for caliber, subcalibers in Calibers do
+		for subcaliber, config in subcalibers do
+			calibers_flattened[`{caliber} {subcaliber}`] = config
+		end
+	end
+
+	if not calibers_flattened[projectileName] then
+		error(`Could not find config for caliber {projectileName}`)
+	end
+
+	return calibers_flattened[projectileName]
 end
 
 return Utilities

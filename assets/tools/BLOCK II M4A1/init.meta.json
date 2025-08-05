@@ -2,8 +2,8 @@
     "className": "Tool",
     "properties": {
         "Attributes": {
-            "Animations": {"String": "AR-15"},
-            "Caliber": {"String": "5.56x45mm"}
+            "Animations": { "String": "AR-15" },
+            "Caliber": { "String": "5.56x45mm M856A1" }
         }
     }
 }

@@ -7,7 +7,6 @@ local Engine = ReplicatedStorage.RCS
 
 local ClientNetwork = require(ReplicatedStorage.RCS.ClientNetwork)
 local Types = require(Engine.Types)
-local Calibers = require(Engine:WaitForChild("Calibers"))
 
 local Modules = Engine:WaitForChild("Modules")
 local FX = Engine:WaitForChild("FX")
@@ -434,25 +433,11 @@ local function DoShoot(isSemi: boolean)
 
 	local id = ProjectileV2:GetId()
 
-	local tracersEnabled = Variables.WeaponData.Tracer
-	local randomTracer = if Variables.WeaponData.RandomTracer.Enabled
-		then math.random() <= Variables.WeaponData.RandomTracer.Chance / 100
-		else false
-	local tracerEveryXShot = not Variables.WeaponData.RandomTracer.Enabled
-		and States.gunState.ShotCounter
-				% Variables.WeaponData.TracerEveryXShots
-			== 0
-	local tracerColor = if tracersEnabled
-			and (randomTracer or tracerEveryXShot)
-		then Variables.WeaponData.TracerColor
-		else nil
-
 	ProjectileV2:Spawn(
 		Variables.WeaponInHand.Handle.Muzzle.WorldCFrame,
-		Calibers[(Variables.WeaponTool :: Tool):GetAttribute("Caliber")],
+		(Variables.WeaponTool :: Tool):GetAttribute("Caliber") :: string,
 		LocalPlayer,
-		id,
-		tracerColor
+		id
 	)
 	ClientNetwork.WeaponEvents.Shoot_CTS.fire({
 		id = id,

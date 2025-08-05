@@ -1,4 +1,3 @@
-local TS = game:GetService("TweenService")
 local self = {}
 
 self.Type = "Rifle"
@@ -44,14 +43,6 @@ self.Firemodes = {
 	Auto = true,
 }
 
-self.LimbDamage = { 35, 40 }
-self.TorsoDamage = { 57, 62 }
-self.HeadDamage = { 150, 150 }
-self.DamageFallOf = 1
-self.MinDamage = 5
-self.IgnoreProtection = false
-self.BulletPenetration = 72
-
 self.camRecoil = {
 	camRecoilUp = { 20, 35 },
 	camRecoilTilt = { 15, 25 },
@@ -73,21 +64,6 @@ self.RecoilPowerStepAmount = 0.1
 
 self.MinSpread = 0.75
 self.MaxSpread = 100
-self.AimInaccuracyStepAmount = 0.75
-self.AimInaccuracyDecrease = 0.25
-self.WalkMult = 0
-
-self.BulletType = "5.56x45mm"
-self.MuzzleVelocity = 1500 --m/s
-self.BulletDrop = 0.25 --Between 0 - 1
-self.Tracer = true
-self.BulletFlare = false
-self.TracerColor = Color3.fromRGB(255, 0, 0)
-self.RandomTracer = {
-	Enabled = false,
-	Chance = 25, -- 0-100%
-}
-self.TracerEveryXShots = 3
 
 self.Chambered = true
 

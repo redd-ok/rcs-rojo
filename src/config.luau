@@ -19,6 +19,7 @@ return {
 	ToggleAim = false,
 	ToggleLean = false,
 
+	RicochetEnabled = true,
 	RicochetMaterialMaxAngle = {
 		Default = 5,
 
@@ -44,6 +45,7 @@ return {
 		Default = 0.35,
 	},
 
+	WallbangEnabled = true,
 	MaterialPenetrationEnergyCost = {
 		Default = 1.1,
 
@@ -74,6 +76,8 @@ return {
 	SpecialNamesPenetrationEnergyCost = {
 		BulletproofGlass = 2,
 	},
+
+	DamageFallOff = true,
 
 	Stamina = {
 		MaxStamina = 100,
@@ -110,7 +114,7 @@ return {
 	},
 
 	MedicalSystem = {
-		Enabled = true,
+		Enabled = false,
 		UpdateRate = 1 / 10,
 
 		MaxBlood = 1000,

@@ -105,8 +105,7 @@ function projectileMultiThread:spawnProjectile(
 	initialCFrame: CFrame,
 	caliberData: Types.Caliber,
 	owner: Player?,
-	bulletId: number?,
-	tracerColor: Color3?
+	bulletId: number?
 )
 	local index = 1
 	while true do
@@ -124,15 +123,15 @@ function projectileMultiThread:spawnProjectile(
 				caliberData,
 				bulletId,
 				index,
-				owner,
-				tracerColor
+				owner
 			)
-			if IsClient and tracerColor then
+			if IsClient and caliberData.Tracer then
 				local projectile =
 					projectileMultiThread.activeProjectiles[index]
 
 				local tracerInstances = TracerCache[index]
-				tracerInstances[3].Color = ColorSequence.new(tracerColor)
+				tracerInstances[3].Color =
+					ColorSequence.new(caliberData.TracerColor)
 
 				projectile.attributes.BulletParticleData = {
 					T0 = nil,
@@ -175,7 +174,7 @@ function projectileMultiThread:init(actor: Actor, sendMessage: (...any) -> ())
 		sendMessage("destroying", projectile)
 	end
 	function projectileMultiThread:projectileHit(raycastResult, projectile)
-		sendMessage("hit", raycastResult, projectile)
+		sendMessage("hit", raycastResult, projectile, projectile:getVelocity())
 	end
 
 	actor:BindToMessage(
@@ -184,15 +183,13 @@ function projectileMultiThread:init(actor: Actor, sendMessage: (...any) -> ())
 			initialCFrame: CFrame,
 			caliberData: Types.Caliber,
 			bulletId: number,
-			owner: Player?,
-			tracerColor: Color3?
+			owner: Player?
 		)
 			projectileMultiThread:spawnProjectile(
 				initialCFrame,
 				caliberData,
 				owner,
-				bulletId,
-				tracerColor
+				bulletId
 			)
 		end
 	)
@@ -351,7 +348,7 @@ function projectileMultiThread:parallelStepProjectile(
 			end
 		end
 
-		if projectile.tracerColor then
+		if caliber.Tracer then
 			local BulletParticleData = projectile.attributes.BulletParticleData
 			local T2 = tick()
 			local P2 =
@@ -478,8 +475,9 @@ function projectileMultiThread:parallelStepProjectile(
 		end
 	end
 
-	if raycastResult then
+	if raycastResult and (Config.RicochetEnabled or Config.WallbangEnabled) then
 		local kineticEnergy = 0.5 * caliber.Mass * currentVelocity.Magnitude ^ 2
+		print(kineticEnergy)
 
 		local grazeAngle = math.pi / 2
 			- math.acos(
@@ -488,7 +486,11 @@ function projectileMultiThread:parallelStepProjectile(
 
 		local maxAngle = Config.RicochetMaterialMaxAngle[raycastResult.Material]
 			or Config.RicochetMaterialMaxAngle.Default
-		if grazeAngle < math.rad(maxAngle) and kineticEnergy > 50 then
+		if
+			grazeAngle < math.rad(maxAngle)
+			and kineticEnergy > 50
+			and Config.RicochetEnabled
+		then
 			local reflectedVelocity =
 				ReflectNormal(currentVelocity.Unit, raycastResult.Normal)
 
@@ -508,7 +510,7 @@ function projectileMultiThread:parallelStepProjectile(
 				hitInst = raycastResult.Instance,
 				type = "ricochet",
 			}
-		else
+		elseif Config.WallbangEnabled then
 			local energyCost = Config.SpecialNamesPenetrationEnergyCost[raycastResult.Instance.Name]
 				or Config.MaterialPenetrationEnergyCost[raycastResult.Material]
 				or Config.MaterialPenetrationEnergyCost.Default
@@ -576,7 +578,7 @@ function projectileMultiThread:parallelStepped(dt: number)
 
 		if IsClient then
 			instances[#instances + 1] = projectileMultiThread.cachedInstances[i]
-			if v.tracerColor and v.attributes.BulletParticleData then
+			if v.attributes.BulletParticleData then
 				setTo[i] = v.attributes.BulletParticleData.SetTo
 			end
 		end
@@ -606,7 +608,7 @@ function projectileMultiThread:parallelStepped(dt: number)
 
 				table.insert(expired, v)
 
-				if v.tracerColor and v.attributes.BulletParticleData then
+				if v.attributes.BulletParticleData then
 					setTo[i] = {
 						[v.attributes.BulletParticleData.Attachment0] = {
 							WorldCFrame = VERY_FAR_CFRAME,
@@ -643,7 +645,7 @@ function projectileMultiThread:parallelStepped(dt: number)
 		)
 
 		for i, v in expired do
-			if v.tracerColor then
+			if v.attributes.BulletParticleData then
 				TracerCache[v.internalId][1].CFrame = VERY_FAR_CFRAME
 				TracerCache[v.internalId][2].CFrame = VERY_FAR_CFRAME
 			end
