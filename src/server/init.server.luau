@@ -28,6 +28,14 @@ local EquipTries: {
 	},
 } =
 	{}
+local ActiveClientProjectiles: {
+	[number]: {
+		Owner: Player,
+		CaliberData: Types.Caliber,
+		DespawnThread: thread,
+	}?,
+} =
+	{}
 
 ServerNetwork.WeaponEvents.Equip.on(function(player, tool)
 	if
@@ -56,7 +64,28 @@ ServerNetwork.WeaponEvents.Unequip.on(function(player)
 end)
 
 ServerNetwork.WeaponEvents.Shoot_CTS.on(function(player, data)
-	ProjectileV2:Spawn(data.position, data.tool:GetAttribute("Caliber"), player)
+	if Config.ServersideProjectiles then
+		ProjectileV2:Spawn(
+			data.position,
+			data.tool:GetAttribute("Caliber"),
+			player
+		)
+	else
+		ActiveClientProjectiles[data.id] = {
+			Owner = player,
+			CaliberData = Utilities:FindProjectileConfig(
+				data.tool:GetAttribute("Caliber")
+			),
+			DespawnThread = task.delay(
+				Config.ProjectileMaximumLifetime + 5,
+				function()
+					if ActiveClientProjectiles[data.id] then
+						ActiveClientProjectiles[data.id] = nil
+					end
+				end
+			),
+		}
+	end
 
 	ServerNetwork.WeaponEvents.Shoot_STC.fireExcept(player, player, {
 		id = data.id,
@@ -65,65 +94,58 @@ ServerNetwork.WeaponEvents.Shoot_CTS.on(function(player, data)
 	})
 end)
 
-function ProjectileV2:ProjectileHit(
-	raycastResult,
-	projectile,
-	projectileVelocity
+local function ProjectileHit(
+	owner: Player,
+	hitPart: BasePart,
+	hitCFrame: CFrame,
+	caliberData: Types.Caliber,
+	projectileSpeed: number
 )
-	if not raycastResult.Instance or not raycastResult.Instance.Parent then
-		return
-	end
-
-	local caliber = projectile.caliberData
 	local initialKineticEnergy = 0.5
-		* caliber.Mass
-		* caliber.InitialVelocity ^ 2
-	local kineticEnergy = 0.5 * caliber.Mass * projectileVelocity.Magnitude ^ 2
+		* caliberData.Mass
+		* caliberData.InitialVelocity ^ 2
+	local kineticEnergy = 0.5 * caliberData.Mass * projectileSpeed ^ 2
 	local damageModifier = if Config.DamageFallOff
-		then kineticEnergy / initialKineticEnergy
+		then math.min(kineticEnergy, initialKineticEnergy) / initialKineticEnergy
 		else 0
 
-	local humanoid = raycastResult.Instance.Parent:FindFirstChildWhichIsA(
-		"Humanoid"
-	) or raycastResult.Instance.Parent and raycastResult.Instance.Parent.Parent and raycastResult.Instance.Parent.Parent:FindFirstChildWhichIsA(
-		"Humanoid"
-	)
+	local humanoid = hitPart.Parent
+			and hitPart.Parent:FindFirstChildWhichIsA("Humanoid")
+		or hitPart.Parent
+			and hitPart.Parent.Parent
+			and hitPart.Parent.Parent:FindFirstChildWhichIsA("Humanoid")
 
 	if humanoid and humanoid.Health > 0 then
 		local hitPlayer = Players:GetPlayerFromCharacter(humanoid.Parent)
 
 		if Config.AntiTeamKill then
-			if hitPlayer and hitPlayer.Team == projectile.owner.Team then
+			if hitPlayer and hitPlayer.Team == owner.Team then
 				return
 			end
 		end
 
 		if Config.MedicalSystem.Enabled then
-			MedicalSystem:characterHit(
-				raycastResult.Instance,
-				raycastResult.Instance.Parent :: Model,
-				projectile.caliberData
-			)
+			MedicalSystem:characterHit(hitPart, humanoid.Parent, caliberData)
 		else
-			if raycastResult.Instance.Name == "Torso" then
+			if hitPart.Name == "Torso" then
 				humanoid:TakeDamage(
 					Utilities:Random(
-						projectile.caliberData.Damage.Torso.Min,
-						projectile.caliberData.Damage.Torso.Max
+						caliberData.Damage.Torso.Min,
+						caliberData.Damage.Torso.Max
 					) * damageModifier
 				)
-			elseif raycastResult.Instance.Name == "Head" then
+			elseif hitPart.Name == "Head" then
 				humanoid:TakeDamage(
 					Utilities:Random(
-						projectile.caliberData.Damage.Head.Min,
-						projectile.caliberData.Damage.Head.Max
+						caliberData.Damage.Head.Min,
+						caliberData.Damage.Head.Max
 					) * damageModifier
 				)
 			else
 				humanoid:TakeDamage(
 					Utilities:Random(
-						projectile.caliberData.Damage.Limb.Min,
-						projectile.caliberData.Damage.Limb.Max
+						caliberData.Damage.Limb.Min,
+						caliberData.Damage.Limb.Max
 					) * damageModifier
 				)
 			end
@@ -133,31 +155,123 @@ function ProjectileV2:ProjectileHit(
 			humanoid.creator:Destroy()
 		end
 		local creator = Instance.new("ObjectValue")
-		creator.Value = projectile.owner
+		creator.Value = owner
 		creator.Parent = humanoid
 		task.delay(5, function()
 			creator:Destroy()
 		end)
 
 		if humanoid and (humanoid.Health <= 0 or math.random() < 0.65) then
-			Utilities:BloodSplatter(
-				CFrame.new(raycastResult.Position),
-				projectile.caliberData,
-				humanoid.Parent
-			)
+			Utilities:BloodSplatter(hitCFrame, caliberData, humanoid.Parent)
 		end
 
 		if not hitPlayer and humanoid.Health <= 0 and Config.EnableRagdoll then
 			RagdollModule:Ragdoll(humanoid.Parent)
 		end
 	elseif humanoid and math.random() < 0.25 then
-		Utilities:BloodSplatter(
-			CFrame.new(raycastResult.Position),
-			projectile.caliberData,
-			humanoid.Parent
-		)
+		Utilities:BloodSplatter(hitCFrame, caliberData, humanoid.Parent)
 	end
 end
+
+function ProjectileV2:ProjectileHit(
+	raycastResult,
+	projectile,
+	projectileVelocity
+)
+	if
+		not raycastResult.Instance
+		or not raycastResult.Instance.Parent
+		or not Config.ServersideProjectiles
+	then
+		return
+	end
+
+	ProjectileHit(
+		projectile.owner,
+		raycastResult.Instance,
+		CFrame.new(
+			raycastResult.Position,
+			raycastResult.Position - raycastResult.Normal
+		),
+		projectile.caliberData,
+		projectileVelocity.Magnitude
+	)
+end
+
+function ProjectileV2:ProjectileRicochet(
+	raycastResult,
+	projectile,
+	projectileVelocity
+)
+	if
+		not raycastResult.Instance
+		or not raycastResult.Instance.Parent
+		or not Config.ServersideProjectiles
+	then
+		return
+	end
+
+	ProjectileHit(
+		projectile.owner,
+		raycastResult.Instance,
+		CFrame.new(
+			raycastResult.Position,
+			raycastResult.Position - raycastResult.Normal
+		),
+		projectile.caliberData,
+		projectileVelocity.Magnitude
+	)
+end
+
+function ProjectileV2:ProjectilePenetration(
+	raycastResult,
+	exitRaycastResult,
+	projectile,
+	projectileVelocity
+)
+	if
+		not raycastResult.Instance
+		or not raycastResult.Instance.Parent
+		or not Config.ServersideProjectiles
+	then
+		return
+	end
+
+	ProjectileHit(
+		projectile.owner,
+		raycastResult.Instance,
+		CFrame.new(
+			raycastResult.Position,
+			raycastResult.Position - raycastResult.Normal
+		),
+		projectile.caliberData,
+		projectileVelocity.Magnitude
+	)
+end
+
+ServerNetwork.WeaponEvents.ProjectileHit.on(function(player, data)
+	if Config.ServersideProjectiles or not data.hitPart:IsA("BasePart") then
+		player:Kick("nice try pal")
+		return
+	end
+
+	local activeClientProjectile = ActiveClientProjectiles[data.id]
+	if not activeClientProjectile then
+		return
+	end
+
+	if not data.penetration then
+		ActiveClientProjectiles[data.id] = nil
+		task.cancel(activeClientProjectile.DespawnThread)
+	end
+	ProjectileHit(
+		activeClientProjectile.Owner,
+		data.hitPart,
+		activeClientProjectile,
+		activeClientProjectile.CaliberData,
+		data.projectileSpeed
+	)
+end)
 
 ServerNetwork.CharacterEvents.HeadReplication_CTS.on(
 	function(player, neckCFrame)

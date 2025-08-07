@@ -25,28 +25,67 @@ function Projectile:ProjectileHit(
 	projectileVelocity: Vector3
 )
 end
+function Projectile:ProjectileRicochet(
+	raycastResult: RaycastResult,
+	projectile: ProjectileClass.Projectile,
+	projectileVelocity: Vector3
+)
+end
+function Projectile:ProjectilePenetration(
+	raycastResult: RaycastResult,
+	exitRaycastResult: RaycastResult,
+	projectile: ProjectileClass.Projectile,
+	projectileVelocity: Vector3
+)
+end
 
-Projectile.MultiThread = MultiThread.new(
-	script:WaitForChild("projectileMultiThread"),
-	function(msg: string, ...)
-		if msg == "destroying" then
+Projectile.MultiThread =
+	MultiThread.new(script:WaitForChild("projectileMultiThread"), {
+		destroying = function(projectile: any)
 			Projectile.activeProjectiles -= 1
-			local projectile = ...
 			Projectile:ProjectileDestroying(
 				setmetatable(projectile, { __index = ProjectileClass })
 			)
-		elseif msg == "hit" then
-			local raycastResult, projectile, velocity = ...
+		end,
+		hit = function(data: {
+			raycastResult: RaycastResult,
+			projectile: any,
+			velocity: Vector3,
+		})
 			Projectile:ProjectileHit(
-				raycastResult,
-				setmetatable(projectile, { __index = ProjectileClass }),
-				velocity
+				data.raycastResult,
+				setmetatable(data.projectile, { __index = ProjectileClass }),
+				data.velocity
 			)
-		elseif msg == "suppress" then
+		end,
+		ricochet = function(data: {
+			raycastResult: RaycastResult,
+			projectile: any,
+			velocity: Vector3,
+		})
+			Projectile:ProjectileRicochet(
+				data.raycastResult,
+				setmetatable(data.projectile, { __index = ProjectileClass }),
+				data.velocity
+			)
+		end,
+		penetration = function(data: {
+			raycastResult: RaycastResult,
+			exitRaycastResult: RaycastResult,
+			projectile: any,
+			velocity: Vector3,
+		})
+			Projectile:ProjectilePenetration(
+				data.raycastResult,
+				data.exitRaycastResult,
+				setmetatable(data.projectile, { __index = ProjectileClass }),
+				data.velocity
+			)
+		end,
+		suppress = function(...)
 			_G.Suppress(...)
-		end
-	end
-)
+		end,
+	})
 Projectile.MultiThread:AllocateActors(Config.ProjectileActorAllocation)
 
 function Projectile:GetId()

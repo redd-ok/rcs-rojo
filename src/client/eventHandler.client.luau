@@ -64,7 +64,20 @@ local function MuzzleFX(WeaponInHand: Types.WeaponInHand)
 	end
 end
 
-function ProjectileV2:ProjectileHit(raycastResult, projectile)
+function ProjectileV2:ProjectileHit(raycastResult, projectile, velocity)
+	if not Config.ServersideProjectiles then
+		ClientNetwork.WeaponEvents.ProjectileHit.fire({
+			hitPart = raycastResult.Instance,
+			hitCFrame = CFrame.new(
+				raycastResult.Position,
+				raycastResult.Position + raycastResult.Normal
+			),
+			projectileSpeed = velocity.Magnitude,
+			id = projectile.bulletId,
+			penetration = false,
+		})
+	end
+
 	Hitmarker.HitEffect(
 		{},
 		raycastResult.Instance,
@@ -76,6 +89,80 @@ function ProjectileV2:ProjectileHit(raycastResult, projectile)
 		raycastResult.Material,
 		projectile,
 		"Hit"
+	)
+end
+
+function ProjectileV2:ProjectileRicochet(raycastResult, projectile, velocity)
+	if not Config.ServersideProjectiles then
+		ClientNetwork.WeaponEvents.ProjectileHit.fire({
+			hitPart = raycastResult.Instance,
+			hitCFrame = CFrame.new(
+				raycastResult.Position,
+				raycastResult.Position + raycastResult.Normal
+			),
+			projectileSpeed = velocity.Magnitude,
+			id = projectile.bulletId,
+			penetration = true,
+		})
+	end
+
+	Hitmarker.HitEffect(
+		{},
+		raycastResult.Instance,
+		Utilities:ConvertHitToCF(
+			raycastResult.Instance :: BasePart,
+			raycastResult.Position,
+			raycastResult.Normal
+		),
+		raycastResult.Material,
+		projectile,
+		"Rico"
+	)
+end
+
+function ProjectileV2:ProjectilePenetration(
+	raycastResult,
+	exitRaycastResult,
+	projectile,
+	velocity
+)
+	if not Config.ServersideProjectiles then
+		ClientNetwork.WeaponEvents.ProjectileHit.fire({
+			hitPart = raycastResult.Instance,
+			hitCFrame = CFrame.new(
+				raycastResult.Position,
+				raycastResult.Position + raycastResult.Normal
+			),
+			projectileSpeed = velocity.Magnitude,
+			id = projectile.bulletId,
+			penetration = true,
+		})
+	end
+
+	Hitmarker.HitEffect(
+		{},
+		raycastResult.Instance,
+		Utilities:ConvertHitToCF(
+			raycastResult.Instance :: BasePart,
+			raycastResult.Position,
+			raycastResult.Normal
+		),
+		raycastResult.Material,
+		projectile,
+		"In"
+	)
+	print(exitRaycastResult)
+	Hitmarker.HitEffect(
+		{},
+		raycastResult.Instance,
+		Utilities:ConvertHitToCF(
+			raycastResult.Instance :: BasePart,
+			exitRaycastResult.Position,
+			exitRaycastResult.Normal
+		),
+		raycastResult.Material,
+		projectile,
+		"Out"
 	)
 end
 

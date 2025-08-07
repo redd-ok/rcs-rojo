@@ -431,10 +431,23 @@ local function DoShoot(isSemi: boolean)
 
 	States.gunState.ShotCounter += 1
 
-	local id = ProjectileV2:GetId()
+	local VerticalBulletSpread = Utilities:Random(
+		Variables.WeaponData.MinSpread,
+		Variables.WeaponData.MaxSpread
+	)
+	local HorizontalBulletSpread = Utilities:Random(
+		Variables.WeaponData.MinSpread,
+		Variables.WeaponData.MaxSpread
+	)
+	local BulletSpread = CFrame.Angles(
+		0,
+		math.rad(HorizontalBulletSpread / 60),
+		0
+	) * CFrame.Angles(math.rad(VerticalBulletSpread / 60), 0, 0)
 
+	local id = ProjectileV2:GetId()
 	ProjectileV2:Spawn(
-		Variables.WeaponInHand.Handle.Muzzle.WorldCFrame,
+		Variables.WeaponInHand.Handle.Muzzle.WorldCFrame * BulletSpread,
 		(Variables.WeaponTool :: Tool):GetAttribute("Caliber") :: string,
 		LocalPlayer,
 		id

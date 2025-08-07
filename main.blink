@@ -46,9 +46,10 @@ scope WeaponEvents {
         Call: SingleSync,
         Data: struct {
             hitPart: Instance(BasePart)?,
-            hitCF: CFrame<f32, f32>,
+            hitCFrame: CFrame<f32, f32>,
+            projectileSpeed: f16,
             id: u32,
-            pen: boolean,
+            penetration: boolean,
         }
     }
 

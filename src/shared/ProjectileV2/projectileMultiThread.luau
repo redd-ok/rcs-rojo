@@ -2,6 +2,7 @@
 --!optimize 2
 
 local Engine = game:GetService("ReplicatedStorage").RCS
+local SFX = Engine.FX.SFX
 
 local Types = require(Engine.Types)
 local Config = require(Engine.RCS_Config)
@@ -99,6 +100,17 @@ function projectileMultiThread:projectileHit(
 	projectile: Projectile.Projectile
 )
 end
+function projectileMultiThread:projectileRicochet(
+	raycastResult: RaycastResult,
+	projectile: Projectile.Projectile
+)
+end
+function projectileMultiThread:projectilePenetration(
+	raycastResult: RaycastResult,
+	exitRaycastResult: RaycastResult,
+	projectile: Projectile.Projectile
+)
+end
 function projectileMultiThread.sendMessage(...: any): () end
 
 function projectileMultiThread:spawnProjectile(
@@ -174,7 +186,30 @@ function projectileMultiThread:init(actor: Actor, sendMessage: (...any) -> ())
 		sendMessage("destroying", projectile)
 	end
 	function projectileMultiThread:projectileHit(raycastResult, projectile)
-		sendMessage("hit", raycastResult, projectile, projectile:getVelocity())
+		sendMessage("hit", {
+			raycastResult = raycastResult,
+			projectile = projectile,
+			velocity = projectile:getVelocity(),
+		})
+	end
+	function projectileMultiThread:projectileRicochet(raycastResult, projectile)
+		sendMessage("ricochet", {
+			raycastResult = raycastResult,
+			projectile = projectile,
+			velocity = projectile:getVelocity(),
+		})
+	end
+	function projectileMultiThread:projectilePenetration(
+		raycastResult,
+		exitRaycastResult,
+		projectile
+	)
+		sendMessage("penetration", {
+			raycastResult = raycastResult,
+			exitRaycastResult = exitRaycastResult,
+			projectile = projectile,
+			velocity = projectile:getVelocity(),
+		})
 	end
 
 	actor:BindToMessage(
@@ -217,9 +252,10 @@ function projectileMultiThread:parallelStepProjectile(
 } | {
 	expired: boolean?,
 	hit: RaycastResult,
+	exitRaycastResult: RaycastResult?,
 	hitPosition: Vector3,
 	bulletPosition: Vector3,
-	type: ("ricochet" | "pen")?,
+	type: ("ricochet" | "penetration")?,
 } | {
 	expired: false?,
 	hit: false,
@@ -228,7 +264,7 @@ function projectileMultiThread:parallelStepProjectile(
 }
 	if not workspace:GetAttribute("DISABLE_PROJECTILE_LIFETIME_DECAY") then
 		if
-			tick() - projectile.lastUpdated > Config.ProjectileMaximumLifetime
+			tick() - projectile.timeCreated > Config.ProjectileMaximumLifetime
 		then
 			return {
 				expired = true,
@@ -262,7 +298,7 @@ function projectileMultiThread:parallelStepProjectile(
 		).Magnitude
 
 		local shouldDesynchronize = false
-		if currentVelocity.Magnitude > 343 / 0.28 then
+		if currentVelocity.Magnitude > 343 then
 			if distFromCamera < 130 then
 				local d = (cameraPos - oldPosition):Dot(currentVelocity)
 					/ currentVelocity:Dot(currentVelocity)
@@ -270,21 +306,17 @@ function projectileMultiThread:parallelStepProjectile(
 				if d > 0 and d < 1 then
 					if
 						distFromCamera < 15
-						and (projectile.attributes.lastWhizz == nil)
+						and projectile.attributes.lastWhizz == nil
 					then
 						shouldDesynchronize = true
 						task.synchronize()
 						projectile.attributes.lastWhizz = tick()
 
-						local sound = Instance.new("Sound", part)
-						sound.SoundId = Config.Sounds.Whizzes[math.random(
-							1,
-							#Config.Sounds.Whizzes
-						)]
-						sound.Volume = math.random(80, 100) / 10
-						sound.RollOffMinDistance = 1000
-						sound.RollOffMaxDistance = 10000
-						sound.PlaybackSpeed = math.random(9, 11) / 10
+						local sounds = SFX.Whizzes:GetChildren()
+						local sound = sounds[math.random(1, #sounds)]:Clone()
+						sound.Parent = part
+						sound.Volume += math.random(-5, 5) / 10
+						sound.PlaybackSpeed += math.random(-10, 10) / 100
 						sound:Play()
 						sound.Ended:Connect(function()
 							sound:Destroy()
@@ -305,15 +337,11 @@ function projectileMultiThread:parallelStepProjectile(
 						projectile.attributes.lastCloseWhizz = tick()
 						projectile.attributes.lastMedWhizz = tick()
 
-						local sound = Instance.new("Sound", part)
-						sound.SoundId = Config.Sounds.Whizzes[math.random(
-							1,
-							#Config.Sounds.Cracks.Close
-						)]
-						sound.Volume = math.random(80, 90) / 10
-						sound.RollOffMinDistance = 1000
-						sound.RollOffMaxDistance = 10000
-						sound.PlaybackSpeed = math.random(9, 11) / 10
+						local sounds = SFX.Cracks.Close:GetChildren()
+						local sound = sounds[math.random(1, #sounds)]:Clone()
+						sound.Parent = part
+						sound.Volume += math.random(-5, 5) / 10
+						sound.PlaybackSpeed += math.random(-10, 10) / 100
 						sound:Play()
 						sound.Ended:Connect(function()
 							sound:Destroy()
@@ -326,15 +354,11 @@ function projectileMultiThread:parallelStepProjectile(
 						task.synchronize()
 						projectile.attributes.lastMedWhizz = tick()
 
-						local sound = Instance.new("Sound", part)
-						sound.SoundId = Config.Sounds.Whizzes[math.random(
-							1,
-							#Config.Sounds.Cracks.Medium
-						)]
-						sound.Volume = math.random(40, 50) / 10
-						sound.RollOffMinDistance = 1000
-						sound.RollOffMaxDistance = 10000
-						sound.PlaybackSpeed = math.random(9, 11) / 10
+						local sounds = SFX.Cracks.Medium:GetChildren()
+						local sound = sounds[math.random(1, #sounds)]:Clone()
+						sound.Parent = part
+						sound.Volume += math.random(-5, 5) / 10
+						sound.PlaybackSpeed += math.random(-10, 10) / 100
 						sound:Play()
 						sound.Ended:Connect(function()
 							sound:Destroy()
@@ -474,18 +498,22 @@ function projectileMultiThread:parallelStepProjectile(
 			break
 		end
 	end
+	local humanoid: Humanoid? = raycastResult
+		and raycastResult.Instance.Parent
+		and raycastResult.Instance.Parent:FindFirstChildWhichIsA("Humanoid")
 
 	if raycastResult and (Config.RicochetEnabled or Config.WallbangEnabled) then
 		local kineticEnergy = 0.5 * caliber.Mass * currentVelocity.Magnitude ^ 2
-		print(kineticEnergy)
 
 		local grazeAngle = math.pi / 2
 			- math.acos(
 				math.abs(currentVelocity.Unit:Dot(raycastResult.Normal.Unit))
 			)
 
-		local maxAngle = Config.RicochetMaterialMaxAngle[raycastResult.Material]
-			or Config.RicochetMaterialMaxAngle.Default
+		local maxAngle = if humanoid
+			then Config.RicochetMaterialMaxAngle.Humanoid
+			else Config.RicochetMaterialMaxAngle[raycastResult.Material]
+				or Config.RicochetMaterialMaxAngle.Default
 		if
 			grazeAngle < math.rad(maxAngle)
 			and kineticEnergy > 50
@@ -511,40 +539,46 @@ function projectileMultiThread:parallelStepProjectile(
 				type = "ricochet",
 			}
 		elseif Config.WallbangEnabled then
-			local energyCost = Config.SpecialNamesPenetrationEnergyCost[raycastResult.Instance.Name]
-				or Config.MaterialPenetrationEnergyCost[raycastResult.Material]
-				or Config.MaterialPenetrationEnergyCost.Default
+			local energyCost = if humanoid
+				then Config.MaterialPenetrationEnergyCost.Humanoid
+				else Config.SpecialNamesPenetrationEnergyCost[raycastResult.Instance.Name]
+					or Config.MaterialPenetrationEnergyCost[raycastResult.Material]
+					or Config.MaterialPenetrationEnergyCost.Default
 
 			local maxPenetrationDepth = kineticEnergy / energyCost
 
-			local result = Utilities:FindExitPoint(
+			local exitPointResult = Utilities:FindExitPoint(
 				raycastResult.Position,
 				currentVelocity.Unit,
 				raycastResult.Instance,
 				maxPenetrationDepth
 			)
 
-			if result and result.thickness * 1000 <= maxPenetrationDepth then
+			if
+				exitPointResult
+				and exitPointResult.thickness * 1000 <= maxPenetrationDepth
+			then
 				local remainingEnergy = kineticEnergy
-					- (result.thickness * energyCost)
+					- (exitPointResult.thickness * 1000 * energyCost)
 				local newSpeed = math.sqrt((2 * remainingEnergy) / caliber.Mass)
 
 				projectile:setVelocity(currentVelocity.Unit * newSpeed)
 				projectile:setPosition(
-					result.raycastResult.Position
+					exitPointResult.raycastResult.Position
 						- (
 							currentVelocity.Unit
-							* math.min(0.1, result.thickness)
+							* math.min(0.1, exitPointResult.thickness)
 						)
 				)
 
 				return {
 					hit = raycastResult,
+					exitRaycastResult = exitPointResult.raycastResult,
 					expired = false,
 					hitPosition = raycastResult.Position,
 					bulletPosition = oldPosition,
 					hitInst = raycastResult.Instance,
-					type = "pen",
+					type = "penetration",
 				}
 			end
 		end
@@ -583,7 +617,17 @@ function projectileMultiThread:parallelStepped(dt: number)
 			end
 		end
 		if result.hit then
-			projectileMultiThread:projectileHit(result.hit, v)
+			if result.type == "ricochet" then
+				projectileMultiThread:projectileRicochet(result.hit, v)
+			elseif result.type == "penetration" then
+				projectileMultiThread:projectilePenetration(
+					result.hit,
+					result.exitRaycastResult,
+					v
+				)
+			else
+				projectileMultiThread:projectileHit(result.hit, v)
+			end
 			if IsClient then
 				if not result.expired then
 					cframes[#cframes + 1] =
@@ -683,7 +727,7 @@ function projectileMultiThread:parallelStepped(dt: number)
 					"%s: %s(%d, %d, %d)",
 					if v.type == "ricochet"
 						then "Ricochet"
-						elseif v.type == "pen" then "Penetration"
+						elseif v.type == "penetration" then "Penetration"
 						else "Hit",
 					v.inst.Name,
 					v.pos2.X,

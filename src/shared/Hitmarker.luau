@@ -137,8 +137,6 @@ local function CreateAttachment(HitCF: CFrame)
 	return Attachment
 end
 
--- function Hitmarker.HitEffect(Ray_Ignore,ACS_Storage,Pos,Hitpart,Norm,Mat,Settings,Power,Type)
-
 -- Type: "Hit", "Rico", "In", "Out", available for use
 -- "In" = wallbang in, "Out" = wallbang out
 -- Additional: "Stab" - stab hits from melee
@@ -148,7 +146,7 @@ function Hitmarker.HitEffect(
 	Off,
 	Mat,
 	Proj: ProjectileV2.Projectile,
-	Type
+	Type: "Hit" | "Rico" | "In" | "Out" | "Stab"
 )
 	debug.profilebegin("Hit Effect")
 
@@ -161,7 +159,7 @@ function Hitmarker.HitEffect(
 	local MatFolder = GetMatFolder(Mat.Name, Hitpart)
 
 	local bulletSpeed, initialVelocity =
-		Proj:getVelocity().Magnitude, Proj.caliberData.InitialVelocity / 0.28
+		Proj:getVelocity().Magnitude, Proj.caliberData.InitialVelocity
 
 	-- bullet hole size per caliber
 	local HSMult = Proj.caliberData.HoleSize * (bulletSpeed / initialVelocity)

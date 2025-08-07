@@ -26,9 +26,11 @@ controller.Parent = actorTemplate
 type DispatcherProps = {
 	Module: ModuleScript,
 	Actors: { Actor },
+	Callbacks: {
+		[string]: (...any) -> (),
+	},
 }
 type DispatcherProto = {
-	Callback: (...any) -> (),
 	AllocateActors: (self: Dispatcher, amount: number) -> (),
 	SendMessage: (self: Dispatcher, message: string, ...any) -> (),
 	SendMessageAll: (self: Dispatcher, message: string, ...any) -> (),
@@ -42,11 +44,13 @@ Dispatcher.__index = Dispatcher
 
 function Dispatcher.new(
 	module: ModuleScript,
-	callback: (...any) -> ()
+	callbacks: {
+		[string]: (...any) -> (),
+	}
 ): Dispatcher
 	return setmetatable({
 		Module = module,
-		Callback = callback,
+		Callbacks = callbacks,
 		Actors = {},
 	}, Dispatcher)
 end
@@ -58,9 +62,11 @@ function Dispatcher:AllocateActors(amount: number)
 		local actor = actorTemplate:Clone()
 		actor.Parent = actorContainer
 		actor.Name = `Actor{#self.Actors + i}`
-		actor.controller.Enabled = true;
+		actor.controller.Enabled = true
 		(actor:FindFirstChild("callback") :: BindableEvent).Event:Connect(
-			self.Callback
+			function(message: string, ...: any)
+				self.Callbacks[message](...)
+			end
 		)
 
 		table.insert(actors, actor)

@@ -9,6 +9,8 @@ return {
 	ProjectileMaximumDistance = 5000, -- how far can a projectile travel before getting removed
 	ProjectileMaximumLifetime = 30, -- how long can a projectile exist before getting removed
 
+	ServersideProjectiles = false, -- should bullets be server-sided (may cause hit-reg issues, should only enable because of cheaters)
+
 	Debug = true,
 	DebugGUI = Enum.KeyCode.RightShift,
 
@@ -22,6 +24,7 @@ return {
 	RicochetEnabled = true,
 	RicochetMaterialMaxAngle = {
 		Default = 5,
+		Humanoid = 0,
 
 		[Enum.Material.Wood] = 1,
 		[Enum.Material.WoodPlanks] = 1,
@@ -48,6 +51,7 @@ return {
 	WallbangEnabled = true,
 	MaterialPenetrationEnergyCost = {
 		Default = 1.1,
+		Humanoid = 2,
 
 		[Enum.Material.Basalt] = 1.3,
 
@@ -168,26 +172,5 @@ return {
 		LeanRight = Enum.KeyCode.E,
 		Crouch = Enum.KeyCode.C,
 		Stand = Enum.KeyCode.X,
-	},
-
-	Sounds = {
-		Whizzes = {
-			"rbxassetid://15690855368",
-			"rbxassetid://15690855509",
-			"rbxassetid://15690855257",
-		},
-
-		Cracks = {
-			Close = {
-				"rbxassetid://15686377931",
-				"rbxassetid://15686377695",
-				"rbxassetid://15686377489",
-			},
-			Medium = {
-				"rbxassetid://15686352208",
-				"rbxassetid://15686352443",
-				"rbxassetid://15686352082",
-			},
-		},
 	},
 }
