@@ -151,7 +151,6 @@ function ProjectileV2:ProjectilePenetration(
 		projectile,
 		"In"
 	)
-	print(exitRaycastResult)
 	Hitmarker.HitEffect(
 		{},
 		raycastResult.Instance,
