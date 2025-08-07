@@ -13,45 +13,35 @@ local Types = require(Engine:WaitForChild("Types"))
 local Utilities = require(Modules:WaitForChild("Utilities"))
 local Hitmarker = require(Modules:WaitForChild("Hitmarker"))
 local Spring = require(Modules:WaitForChild("Spring"))
-local Projectile = require(Modules:WaitForChild("Projectile"))
--- Projectile:AllocateProjectiles(Config.ProjectileAllocation)
 local ProjectileV2 = require(Modules:WaitForChild("ProjectileV2"))
 
 local Hud = Players.LocalPlayer.PlayerGui:WaitForChild("RCS_Hud")
 
--- local CurrentCamera = workspace.CurrentCamera
-
 local SuppressionSpring = Spring.new(Vector2.new(), 42, 0.6)
 
 local NeckCFrames = {}
--- local MaterialsDur = {
--- 	Glass = 0.5,
--- 	Grass = 1,
--- 	LeafyGrass = 1,
--- 	Ground = 1.5,
--- 	Wood = 1,
--- 	WoodPlanks = 1,
--- 	Metal = 7.9,
--- 	DiamondPlate = 8.3,
--- }
 
 local function MuzzleFX(WeaponInHand: Types.WeaponInHand)
 	local Handle = WeaponInHand.Handle
-	local Tool = WeaponInHand.Parent and WeaponInHand.Parent:FindFirstChildOfClass("Tool")
+	local Tool = WeaponInHand.Parent
+		and WeaponInHand.Parent:FindFirstChildOfClass("Tool")
 	local Fired = Tool:GetAttribute("ShotsFired") or 2
 	local Muzzle = Handle.Muzzle :: BasePart & {
 		Indoor: Sound,
 		Fire: Sound,
 	}
 
-	if not Tool then return end
+	if not Tool then
+		return
+	end
 
 	if not Muzzle:GetAttribute("LoopingSounds") or Fired < 2 then
 		if
 			Muzzle:GetAttribute("IndoorSounds")
 			and Utilities:IsIndoors(Muzzle.WorldPosition, {
 				WeaponInHand.Parent :: Model,
-			}) and Fired > 1
+			})
+			and Fired > 1
 		then
 			Muzzle.Indoor:Play()
 		else
@@ -74,164 +64,20 @@ local function MuzzleFX(WeaponInHand: Types.WeaponInHand)
 	end
 end
 
--- local hitFunc: Projectile.HitFunction
--- function hitFunc(
--- 	proj: Projectile.ActiveProjectile,
--- 	raycastResult: RaycastResult,
--- 	raycastParams: RaycastParams
--- )
--- 	if
--- 		raycastResult.Instance.Parent
--- 		and (
--- 			raycastResult.Instance.Parent:IsA("Hat")
--- 			or raycastResult.Instance.Parent:IsA("Accessory")
--- 			or (
--- 				raycastResult.Instance.Parent:FindFirstChildWhichIsA("Humanoid")
--- 				and raycastResult.Instance.Name == "HumanoidRootPart"
--- 			)
--- 		)
--- 	then
--- 		raycastParams:AddToFilter(raycastResult.Instance)
--- 		return true, true
--- 	end
+function ProjectileV2:ProjectileHit(raycastResult, projectile, velocity)
+	if not Config.ServersideProjectiles then
+		ClientNetwork.WeaponEvents.ProjectileHit.fire({
+			hitPart = raycastResult.Instance,
+			hitCFrame = CFrame.new(
+				raycastResult.Position,
+				raycastResult.Position + raycastResult.Normal
+			),
+			projectileSpeed = velocity.Magnitude,
+			id = projectile.bulletId,
+			penetration = false,
+		})
+	end
 
--- 	local _partProps: PhysicalProperties = (raycastResult.Instance :: BasePart).CurrentPhysicalProperties
--- 	local _hitMass = (raycastResult.Instance :: BasePart):GetMass()
--- 	local penPower = (
--- 		proj.attributes.PenPower :: number or proj.caliber.PenetrationPower
--- 	)
--- 		* (
--- 			proj.currentVelocity.Magnitude
--- 			/ (proj.caliber.InitialVelocity / 0.28)
--- 		)
--- 	local exitPointResult = Utilities:FindExitPoint(
--- 		raycastResult.Position,
--- 		proj.currentVelocity.Unit,
--- 		raycastResult.Instance :: BasePart
--- 	)
-
--- 	if exitPointResult then
--- 		local penNeeded = (MaterialsDur[raycastResult.Material.Name] or 3.5)
--- 			* (
--- 				(MaterialsDur[raycastResult.Material.Name] or 3.5)
--- 				* (exitPointResult.thickness ^ 2)
--- 			)
-
--- 		local exitPointRay = exitPointResult.raycastResult
--- 		if penPower > penNeeded then
--- 			proj.currentVelocity *= 1 - (penNeeded / penPower)
--- 			proj.attributes.PenPower = (
--- 				proj.attributes.PenPower or proj.caliber.PenetrationPower
--- 			) - penNeeded
--- 			proj.currentPosition = exitPointRay.Position
-
--- 			Hitmarker.HitEffect(
--- 				{},
--- 				exitPointRay.Instance,
--- 				Utilities:ConvertHitToCF(
--- 					exitPointRay.Instance,
--- 					exitPointRay.Position,
--- 					exitPointRay.Normal
--- 				),
--- 				exitPointRay.Material,
--- 				proj,
--- 				"Out"
--- 			)
-
--- 			return true
--- 		end
--- 	end
-
--- 	return
--- end
-
--- local function hitFunc1(
--- 	proj: Projectile.ActiveProjectile,
--- 	raycastResult: RaycastResult,
--- 	raycastParams: RaycastParams
--- )
--- 	local pen, recast = hitFunc(proj, raycastResult, raycastParams)
-
--- 	if recast then
--- 		return pen, recast
--- 	end
-
--- 	ClientNetwork.WeaponEvents.ProjectileHit.fire({
--- 		hitPart = raycastResult.Instance,
--- 		hitCF = CFrame.new(raycastResult.Position, proj.currentPosition),
--- 		id = proj.id,
--- 		pen = pen,
--- 	})
-
--- 	Hitmarker.HitEffect(
--- 		{},
--- 		raycastResult.Instance,
--- 		Utilities:ConvertHitToCF(
--- 			raycastResult.Instance :: BasePart,
--- 			raycastResult.Position,
--- 			raycastResult.Normal
--- 		),
--- 		raycastResult.Material,
--- 		proj,
--- 		pen and "In" or "Hit"
--- 	)
-
--- 	return pen
--- end
-
--- local function hitFunc2(
--- 	proj: Projectile.ActiveProjectile,
--- 	raycastResult: RaycastResult,
--- 	raycastParams: RaycastParams
--- )
--- 	local pen, recast = hitFunc(proj, raycastResult, raycastParams)
--- 	if recast then
--- 		return false, recast
--- 	end
-
--- 	Hitmarker.HitEffect(
--- 		{},
--- 		raycastResult.Instance,
--- 		Utilities:ConvertHitToCF(
--- 			raycastResult.Instance :: BasePart,
--- 			raycastResult.Position,
--- 			raycastResult.Normal
--- 		),
--- 		raycastResult.Material,
--- 		proj,
--- 		pen and "In" or "Hit"
--- 	)
-
--- 	return pen
--- end
-
--- _G.ShootProjectile = function(tool: Tool, cframe: CFrame)
--- 	local id = math.random(2 ^ (3 * 8))
-
--- 	ClientNetwork.WeaponEvents.Shoot_CTS.fire({
--- 		id = id,
--- 		position = cframe,
--- 		tool = tool,
--- 	})
--- 	-- Projectile:NewProjectile(
--- 	-- 	Projectile:GetCaliber(tool:GetAttribute("Caliber") :: string) :: Types.Caliber,
--- 	-- 	cframe,
--- 	-- 	id,
--- 	-- 	hitFunc1,
--- 	-- 	{
--- 	-- 		workspace.RCS_Workspace.Client,
--- 	-- 		workspace.RCS_Workspace.Server,
--- 	-- 		workspace.CurrentCamera,
--- 	-- 		game:GetService("Players").LocalPlayer.Character :: Model,
--- 	-- 	}
--- 	-- )
--- 	ProjectileV2:Spawn(
--- 		cframe,
--- 		Projectile:GetCaliber(tool:GetAttribute("Caliber") :: string) :: Types.Caliber
--- 	)
--- end
-
-function ProjectileV2:ProjectileHit(raycastResult, projectile)
 	Hitmarker.HitEffect(
 		{},
 		raycastResult.Instance,
@@ -246,23 +92,84 @@ function ProjectileV2:ProjectileHit(raycastResult, projectile)
 	)
 end
 
+function ProjectileV2:ProjectileRicochet(raycastResult, projectile, velocity)
+	if not Config.ServersideProjectiles then
+		ClientNetwork.WeaponEvents.ProjectileHit.fire({
+			hitPart = raycastResult.Instance,
+			hitCFrame = CFrame.new(
+				raycastResult.Position,
+				raycastResult.Position + raycastResult.Normal
+			),
+			projectileSpeed = velocity.Magnitude,
+			id = projectile.bulletId,
+			penetration = true,
+		})
+	end
+
+	Hitmarker.HitEffect(
+		{},
+		raycastResult.Instance,
+		Utilities:ConvertHitToCF(
+			raycastResult.Instance :: BasePart,
+			raycastResult.Position,
+			raycastResult.Normal
+		),
+		raycastResult.Material,
+		projectile,
+		"Rico"
+	)
+end
+
+function ProjectileV2:ProjectilePenetration(
+	raycastResult,
+	exitRaycastResult,
+	projectile,
+	velocity
+)
+	if not Config.ServersideProjectiles then
+		ClientNetwork.WeaponEvents.ProjectileHit.fire({
+			hitPart = raycastResult.Instance,
+			hitCFrame = CFrame.new(
+				raycastResult.Position,
+				raycastResult.Position + raycastResult.Normal
+			),
+			projectileSpeed = velocity.Magnitude,
+			id = projectile.bulletId,
+			penetration = true,
+		})
+	end
+
+	Hitmarker.HitEffect(
+		{},
+		raycastResult.Instance,
+		Utilities:ConvertHitToCF(
+			raycastResult.Instance :: BasePart,
+			raycastResult.Position,
+			raycastResult.Normal
+		),
+		raycastResult.Material,
+		projectile,
+		"In"
+	)
+	Hitmarker.HitEffect(
+		{},
+		raycastResult.Instance,
+		Utilities:ConvertHitToCF(
+			raycastResult.Instance :: BasePart,
+			exitRaycastResult.Position,
+			exitRaycastResult.Normal
+		),
+		raycastResult.Material,
+		projectile,
+		"Out"
+	)
+end
+
 ClientNetwork.WeaponEvents.Shoot_STC.on(function(owner, data)
 	if owner and owner.Character and data.tool then
-		-- Projectile:NewProjectile(
-		-- 	Projectile:GetCaliber(data.tool:GetAttribute("Caliber") :: string) :: Types.Caliber,
-		-- 	data.position,
-		-- 	data.id,
-		-- 	hitFunc2,
-		-- 	{
-		-- 		workspace.RCS_Workspace.Client,
-		-- 		workspace.RCS_Workspace.Server,
-		-- 		workspace.CurrentCamera,
-		-- 		owner.Character,
-		-- 	}
-		-- )
 		ProjectileV2:Spawn(
 			data.position,
-			Projectile:GetCaliber(data.tool:GetAttribute("Caliber") :: string) :: Types.Caliber,
+			data.tool:GetAttribute("Caliber"),
 			owner
 		)
 
@@ -667,21 +574,6 @@ local Suppression = {
 	last = 0,
 	disorientation = 0,
 }
--- local FlashTextures = { "rbxassetid://18295676458", "rbxassetid://18295676981" }
-
--- local function get(val)
--- 	return (math.sin(val) + 1) - ((math.sin(val) + 1) / 2)
--- end
-
--- ClientNetwork.Flashbang.on(function(pos, intensity)
--- 	local cameraPosition = CurrentCamera.CFrame.Position
-
--- 	if (pos - cameraPosition).Magnitude < intensity * 2 then
--- 		local point, visible = CurrentCamera:WorldToViewportPoint(pos)
--- 		if visible then
--- 		end
--- 	end
--- end)
 
 local medInfo
 ClientNetwork.MedicalUpdate.on(function(_medInfo)
@@ -690,8 +582,6 @@ ClientNetwork.MedicalUpdate.on(function(_medInfo)
 end)
 
 game:GetService("RunService").PostSimulation:Connect(function(deltaTime)
-	Projectile:Step(deltaTime)
-
 	for neck, data in NeckCFrames do
 		local started: number = data[3]
 

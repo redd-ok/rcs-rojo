@@ -2,8 +2,8 @@
     "className": "Tool",
     "properties": {
         "Attributes": {
-            "Animations": {"String": "Glock 17"},
-            "Caliber": {"String": "9x19mm"}
+            "Animations": { "String": "Glock 17" },
+            "Caliber": { "String": ".45 ACP FMJ" }
         }
     }
 }

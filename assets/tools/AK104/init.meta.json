@@ -2,8 +2,10 @@
     "className": "Tool",
     "properties": {
         "Attributes": {
-            "Animations": {"String": "AK"},
-            "Caliber": {"String": "7.62x39mm"}
+            "Animations": { "String": "AK" },
+            "Caliber": {
+                "String": "7.62x39mm 57-N-231"
+            }
         }
     }
 }

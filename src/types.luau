@@ -99,15 +99,6 @@ export type GunConfig = {
 		Auto: boolean,
 	},
 
-	LimbDamage: { number },
-	TorsoDamage: { number },
-
-	DamageFallOf: number,
-	MinDamage: number,
-
-	IgnoreProtection: boolean,
-	BulletPenetration: number,
-
 	camRecoil: {
 		camRecoilUp: { number },
 		camRecoilTilt: { number },
@@ -124,17 +115,6 @@ export type GunConfig = {
 
 	MinSpread: number,
 	MaxSpread: number,
-
-	BulletType: string,
-
-	Tracer: boolean,
-	BulletFlare: boolean,
-	TracerColor: Color3,
-	RandomTracer: {
-		Enabled: boolean,
-		Chance: number,
-	},
-	TracerEveryXShots: number,
 
 	Chambered: boolean,
 }
@@ -194,6 +174,10 @@ export type Caliber = {
 
 	ImpactEnergy: number,
 	HoleSize: number,
+
+	Tracer: boolean,
+	TracerColor: Color3,
+	TracerSize: number,
 
 	SuppressionAmount: number,
 

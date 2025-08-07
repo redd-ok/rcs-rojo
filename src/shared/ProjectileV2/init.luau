@@ -1,10 +1,10 @@
 local Engine = game:GetService("ReplicatedStorage").RCS
 
-local Types = require(Engine.Types)
 local Config = require(Engine.RCS_Config)
 
 local Modules = Engine.Modules
 
+local Utilities = require(Modules:WaitForChild("Utilities"))
 local MultiThread = require(Modules:WaitForChild("MultiThread"))
 local ProjectileClass = require(script:WaitForChild("projectile"))
 export type Projectile = ProjectileClass.Projectile
@@ -21,30 +21,71 @@ function Projectile:ProjectileDestroying(
 end
 function Projectile:ProjectileHit(
 	raycastResult: RaycastResult,
-	projectile: ProjectileClass.Projectile
+	projectile: ProjectileClass.Projectile,
+	projectileVelocity: Vector3
+)
+end
+function Projectile:ProjectileRicochet(
+	raycastResult: RaycastResult,
+	projectile: ProjectileClass.Projectile,
+	projectileVelocity: Vector3
+)
+end
+function Projectile:ProjectilePenetration(
+	raycastResult: RaycastResult,
+	exitRaycastResult: RaycastResult,
+	projectile: ProjectileClass.Projectile,
+	projectileVelocity: Vector3
 )
 end
 
-Projectile.MultiThread = MultiThread.new(
-	script:WaitForChild("projectileMultiThread"),
-	function(msg: string, ...)
-		if msg == "destroying" then
+Projectile.MultiThread =
+	MultiThread.new(script:WaitForChild("projectileMultiThread"), {
+		destroying = function(projectile: any)
 			Projectile.activeProjectiles -= 1
-			local projectile = ...
 			Projectile:ProjectileDestroying(
 				setmetatable(projectile, { __index = ProjectileClass })
 			)
-		elseif msg == "hit" then
-			local raycastResult, projectile = ...
+		end,
+		hit = function(data: {
+			raycastResult: RaycastResult,
+			projectile: any,
+			velocity: Vector3,
+		})
 			Projectile:ProjectileHit(
-				raycastResult,
-				setmetatable(projectile, { __index = ProjectileClass })
+				data.raycastResult,
+				setmetatable(data.projectile, { __index = ProjectileClass }),
+				data.velocity
 			)
-		elseif msg == "suppress" then
+		end,
+		ricochet = function(data: {
+			raycastResult: RaycastResult,
+			projectile: any,
+			velocity: Vector3,
+		})
+			Projectile:ProjectileRicochet(
+				data.raycastResult,
+				setmetatable(data.projectile, { __index = ProjectileClass }),
+				data.velocity
+			)
+		end,
+		penetration = function(data: {
+			raycastResult: RaycastResult,
+			exitRaycastResult: RaycastResult,
+			projectile: any,
+			velocity: Vector3,
+		})
+			Projectile:ProjectilePenetration(
+				data.raycastResult,
+				data.exitRaycastResult,
+				setmetatable(data.projectile, { __index = ProjectileClass }),
+				data.velocity
+			)
+		end,
+		suppress = function(...)
 			_G.Suppress(...)
-		end
-	end
-)
+		end,
+	})
 Projectile.MultiThread:AllocateActors(Config.ProjectileActorAllocation)
 
 function Projectile:GetId()
@@ -57,10 +98,9 @@ end
 
 function Projectile:Spawn(
 	startCFrame: CFrame,
-	caliberData: Types.Caliber,
+	caliberName: string,
 	owner: Player?,
-	bulletId: number?,
-	tracerColor: Color3?
+	bulletId: number?
 )
 	if Projectile.activeProjectiles > Projectile._maxProjectiles then
 		warn(
@@ -73,10 +113,9 @@ function Projectile:Spawn(
 	Projectile.MultiThread:SendMessage(
 		"spawn",
 		startCFrame,
-		caliberData,
+		Utilities:FindProjectileConfig(caliberName),
 		bulletId,
-		owner,
-		tracerColor
+		owner
 	)
 end
 
