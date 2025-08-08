@@ -145,6 +145,12 @@
             "$properties": {
                 "GameSettingsAvatar": "R6"
             }
+        },
+
+        "SoundService": {
+            "$properties": {
+                "RespectFilteringEnabled": true
+            }
         }
     }
 }

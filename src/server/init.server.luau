@@ -267,7 +267,7 @@ ServerNetwork.WeaponEvents.ProjectileHit.on(function(player, data)
 	ProjectileHit(
 		activeClientProjectile.Owner,
 		data.hitPart,
-		activeClientProjectile,
+		data.hitCFrame,
 		activeClientProjectile.CaliberData,
 		data.projectileSpeed
 	)

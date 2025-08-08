@@ -454,7 +454,8 @@ local function DoShoot(isSemi: boolean)
 	)
 	ClientNetwork.WeaponEvents.Shoot_CTS.fire({
 		id = id,
-		position = Variables.WeaponInHand.Handle.Muzzle.WorldCFrame,
+		position = Variables.WeaponInHand.Handle.Muzzle.WorldCFrame
+			* BulletSpread,
 		tool = Variables.WeaponTool :: Tool,
 	})
 
