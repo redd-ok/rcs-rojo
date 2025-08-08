@@ -91,6 +91,8 @@ ServerNetwork.WeaponEvents.Shoot_CTS.on(function(player, data)
 		id = data.id,
 		position = data.position,
 		tool = data.tool,
+		playSemiSound = data.playSemiSound,
+		indoorSound = data.indoorSound,
 	})
 end)
 

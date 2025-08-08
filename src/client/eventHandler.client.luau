@@ -21,11 +21,14 @@ local SuppressionSpring = Spring.new(Vector2.new(), 42, 0.6)
 
 local NeckCFrames = {}
 
-local function MuzzleFX(WeaponInHand: Types.WeaponInHand)
+local function MuzzleFX(
+	WeaponInHand: Types.WeaponInHand,
+	playSemiSound: boolean,
+	indoorSound: boolean
+)
 	local Handle = WeaponInHand.Handle
 	local Tool = WeaponInHand.Parent
 		and WeaponInHand.Parent:FindFirstChildOfClass("Tool")
-	local Fired = Tool:GetAttribute("ShotsFired") or 2
 	local Muzzle = Handle.Muzzle :: BasePart & {
 		Indoor: Sound,
 		Fire: Sound,
@@ -35,14 +38,8 @@ local function MuzzleFX(WeaponInHand: Types.WeaponInHand)
 		return
 	end
 
-	if not Muzzle:GetAttribute("LoopingSounds") or Fired < 2 then
-		if
-			Muzzle:GetAttribute("IndoorSounds")
-			and Utilities:IsIndoors(Muzzle.WorldPosition, {
-				WeaponInHand.Parent :: Model,
-			})
-			and Fired > 1
-		then
+	if playSemiSound then
+		if indoorSound then
 			Muzzle.Indoor:Play()
 		else
 			Muzzle.Fire:Play()
@@ -188,7 +185,9 @@ ClientNetwork.WeaponEvents.Shoot_STC.on(function(owner, data)
 		MuzzleFX(
 			(data.tool.Parent :: Model):FindFirstChild(
 					"S_" .. data.tool.Name
-				) :: Types.WeaponInHand
+				) :: Types.WeaponInHand,
+			data.playSemiSound,
+			data.indoorSound
 		)
 	end
 end)
@@ -548,13 +547,9 @@ ClientNetwork.WeaponEvents.LoopingSounds_STC.on(function(owner, start)
 	local Handle = WeaponInHand.Handle
 	local Muzzle = Handle.Muzzle
 
-	if not Muzzle:GetAttribute("LoopingSounds") then
-		return
-	end
-
 	if start then
 		if
-			Muzzle:GetAttribute("IndoorSounds")
+			Muzzle:FindFirstChild("IndoorLoop")
 			and Utilities:IsIndoors(Muzzle.WorldPosition, { owner.Character })
 		then
 			Muzzle.IndoorLoop.Playing = true
@@ -564,17 +559,18 @@ ClientNetwork.WeaponEvents.LoopingSounds_STC.on(function(owner, start)
 	else
 		Muzzle.Loop.Playing = false
 
-		if Muzzle:GetAttribute("IndoorSounds") then
+		if Muzzle:FindFirstChild("IndoorLoop") then
 			Muzzle.IndoorLoop.Playing = false
+		end
 
-			if
-				Utilities:IsIndoors(Muzzle.WorldPosition, {
-					owner.Character,
-				})
-			then
-				Muzzle.IndoorLoopTail:Play()
-				return
-			end
+		if
+			Muzzle:FindFirstChild("IndoorLoopTail")
+			and Utilities:IsIndoors(Muzzle.WorldPosition, {
+				owner.Character,
+			})
+		then
+			Muzzle.IndoorLoopTail:Play()
+			return
 		end
 
 		Muzzle.LoopTail:Play()

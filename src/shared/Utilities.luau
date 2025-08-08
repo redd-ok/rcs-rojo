@@ -299,4 +299,18 @@ function Utilities:FindProjectileConfig(projectileName: string): Types.Caliber
 	return calibers_flattened[projectileName]
 end
 
+function Utilities:HasLoopingSounds(instance: Instance)
+	return (
+		instance:FindFirstChild("Loop")
+		or instance:FindFirstChild("LoopTail")
+		or instance:FindFirstChild("IndoorLoop")
+		or instance:FindFirstChild("IndoorLoopTail")
+	) ~= nil
+end
+function Utilities:HasSingleSounds(instance: Instance)
+	return (
+		instance:FindFirstChild("Fire") or instance:FindFirstChild("Indoor")
+	) ~= nil
+end
+
 return Utilities

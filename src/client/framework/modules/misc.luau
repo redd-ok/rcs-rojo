@@ -64,20 +64,6 @@ local function PlaySFX(sfx: string, _loudness: number?)
 	end)
 end
 
-local function HasLoopingSounds(instance: Instance)
-	return (
-		instance:FindFirstChild("Loop")
-		or instance:FindFirstChild("LoopTail")
-		or instance:FindFirstChild("IndoorLoop")
-		or instance:FindFirstChild("IndoorLoopTail")
-	) ~= nil
-end
-local function HasSingleSounds(instance: Instance)
-	return (
-		instance:FindFirstChild("Fire") or instance:FindFirstChild("Indoor")
-	) ~= nil
-end
-
 local function LoopingSounds(start, isSemi: boolean)
 	if
 		not Variables.Viewmodel
@@ -90,7 +76,10 @@ local function LoopingSounds(start, isSemi: boolean)
 	local Handle = Variables.WeaponInHand.Handle
 	local Muzzle = Handle.Muzzle
 
-	if not HasLoopingSounds(Muzzle) or isSemi and HasSingleSounds(Muzzle) then
+	if
+		not Utilities:HasLoopingSounds(Muzzle)
+		or isSemi and Utilities:HasSingleSounds(Muzzle)
+	then
 		return
 	end
 
@@ -289,7 +278,7 @@ local function Recoil()
 	)
 end
 
-local function MuzzleFX(isSemi: boolean)
+local function MuzzleFX(playSemiSound: boolean, indoorSound: boolean)
 	if
 		not Variables.WeaponInHand
 		or not Variables.WeaponData
@@ -300,13 +289,8 @@ local function MuzzleFX(isSemi: boolean)
 	local Handle = Variables.WeaponInHand.Handle
 	local Muzzle = Handle.Muzzle
 
-	if not HasLoopingSounds(Muzzle) or isSemi then
-		if
-			Utilities:IsIndoors(Muzzle.WorldPosition, {
-				Character,
-				workspace.CurrentCamera,
-			}) and Muzzle:FindFirstChild("Indoor")
-		then
+	if playSemiSound then
+		if indoorSound then
 			Muzzle.Indoor:Play()
 		elseif Muzzle:FindFirstChild("Fire") then
 			Muzzle.Fire:Play()
@@ -422,6 +406,8 @@ local function DoShoot(isSemi: boolean)
 		return
 	end
 
+	local Muzzle = Variables.WeaponInHand.Handle.Muzzle
+
 	States.gunState.ShootDelay = true
 	task.spawn(Recoil)
 	if Variables.AnimData.ShootAnim then
@@ -452,11 +438,22 @@ local function DoShoot(isSemi: boolean)
 		LocalPlayer,
 		id
 	)
+
+	local playSemiSound = not Utilities:HasLoopingSounds(Muzzle)
+		or isSemi and Utilities:HasSingleSounds(Muzzle)
+	local indoorSound = playSemiSound
+		and Muzzle:FindFirstChild("Indoor")
+		and Utilities:IsIndoors(Muzzle.WorldPosition, {
+			Character,
+			workspace.CurrentCamera,
+		})
+
 	ClientNetwork.WeaponEvents.Shoot_CTS.fire({
 		id = id,
-		position = Variables.WeaponInHand.Handle.Muzzle.WorldCFrame
-			* BulletSpread,
+		position = Muzzle.WorldCFrame * BulletSpread,
 		tool = Variables.WeaponTool :: Tool,
+		playSemiSound = playSemiSound,
+		indoorSound = indoorSound,
 	})
 
 	PlaySFX("Trigger")
@@ -466,7 +463,7 @@ local function DoShoot(isSemi: boolean)
 		Variables.WeaponData.Chambered = false
 	end
 
-	MuzzleFX(isSemi)
+	MuzzleFX(playSemiSound, indoorSound)
 
 	if
 		Variables.WeaponData.Firemode == 4
