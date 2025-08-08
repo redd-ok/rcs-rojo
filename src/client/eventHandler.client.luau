@@ -65,7 +65,11 @@ local function MuzzleFX(WeaponInHand: Types.WeaponInHand)
 end
 
 function ProjectileV2:ProjectileHit(raycastResult, projectile, velocity)
-	if not Config.ServersideProjectiles then
+	if
+		not Config.ServersideProjectiles
+		and projectile.bulletId
+		and projectile.owner == Players.LocalPlayer
+	then
 		ClientNetwork.WeaponEvents.ProjectileHit.fire({
 			hitPart = raycastResult.Instance,
 			hitCFrame = CFrame.new(
@@ -93,7 +97,11 @@ function ProjectileV2:ProjectileHit(raycastResult, projectile, velocity)
 end
 
 function ProjectileV2:ProjectileRicochet(raycastResult, projectile, velocity)
-	if not Config.ServersideProjectiles then
+	if
+		not Config.ServersideProjectiles
+		and projectile.bulletId
+		and projectile.owner == Players.LocalPlayer
+	then
 		ClientNetwork.WeaponEvents.ProjectileHit.fire({
 			hitPart = raycastResult.Instance,
 			hitCFrame = CFrame.new(
@@ -126,7 +134,11 @@ function ProjectileV2:ProjectilePenetration(
 	projectile,
 	velocity
 )
-	if not Config.ServersideProjectiles then
+	if
+		not Config.ServersideProjectiles
+		and projectile.bulletId
+		and projectile.owner == Players.LocalPlayer
+	then
 		ClientNetwork.WeaponEvents.ProjectileHit.fire({
 			hitPart = raycastResult.Instance,
 			hitCFrame = CFrame.new(

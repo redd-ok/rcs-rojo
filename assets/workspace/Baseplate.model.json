@@ -28,6 +28,7 @@
         "Size": [2048, 16, 2048],
         "TopSurface": "Smooth",
         "BottomSurface": "Smooth",
-        "Anchored": true
+        "Anchored": true,
+        "Locked": true
     }
 }
