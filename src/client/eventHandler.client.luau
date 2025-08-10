@@ -39,10 +39,19 @@ local function MuzzleFX(
 	end
 
 	if playSemiSound then
+		local sound
 		if indoorSound then
-			Muzzle.Indoor:Play()
-		else
-			Muzzle.Fire:Play()
+			sound = Muzzle.Indoor:Clone()
+		elseif Muzzle:FindFirstChild("Fire") then
+			sound = Muzzle.Fire:Clone()
+		end
+
+		if sound then
+			sound.Parent = Muzzle
+			sound:Play()
+			task.delay(sound.TimeLength / sound.PlaybackSpeed, function()
+				sound:Destroy()
+			end)
 		end
 	end
 
