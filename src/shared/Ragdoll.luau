@@ -250,7 +250,6 @@ function RagdollModule:Step()
 		game:GetService("CollectionService"):GetTagged("RagdolledBody")
 	do
 		local Humanoid = Character:FindFirstChild("Humanoid") :: Humanoid
-		Humanoid:ChangeState(Enum.HumanoidStateType.Physics)
 		Humanoid.PlatformStand = true
 		Humanoid.AutoRotate = false
 
