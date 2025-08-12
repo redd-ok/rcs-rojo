@@ -4,5 +4,7 @@ src/network
 luau_packages
 lune_packages
 pesde.lock
+*.rbxlx
+*.rbxlx.lock
 *.rbxl
 *.rbxl.lock
