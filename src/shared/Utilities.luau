@@ -1,6 +1,15 @@
-local Types = require(game:GetService("ReplicatedStorage").RCS.Types)
-local Calibers = require(game:GetService("ReplicatedStorage").RCS.Calibers)
-local FX = game:GetService("ReplicatedStorage").RCS:WaitForChild("FX")
+local Lighting = game:GetService("Lighting")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local RCS = ReplicatedStorage.RCS
+
+local FX = RCS:WaitForChild("FX")
+
+local Config = require(RCS.RCS_Config)
+local Types = require(RCS.Types)
+local Calibers = require(RCS.Calibers)
+
+local CurrentCamera = workspace.CurrentCamera
 
 local Utilities = {}
 
@@ -311,6 +320,134 @@ function Utilities:HasSingleSounds(instance: Instance)
 	return (
 		instance:FindFirstChild("Fire") or instance:FindFirstChild("Indoor")
 	) ~= nil
+end
+
+function Utilities:PlaySoundAtPosition(sound: Sound, position: Vector3)
+	local soundCloned = sound:Clone()
+	local attachment = Instance.new("Attachment")
+	attachment.Parent = workspace.Terrain
+	soundCloned.Parent = attachment
+
+	attachment.WorldPosition = position
+
+	if Config.SpeedOfSoundEnabled then
+		task.delay(
+			(CurrentCamera.CFrame.Position - position).Magnitude
+				/ Config.SpeedOfSound,
+			function()
+				soundCloned:Play()
+				task.delay(
+					soundCloned.TimeLength / soundCloned.PlaybackSpeed,
+					function()
+						soundCloned:Destroy()
+					end
+				)
+			end
+		)
+	else
+		soundCloned:Play()
+		task.delay(
+			soundCloned.TimeLength / soundCloned.PlaybackSpeed,
+			function()
+				soundCloned:Destroy()
+			end
+		)
+	end
+end
+
+function Utilities:GetDistantWeaponSounds(
+	soundContainer: Folder,
+	distance: number
+)
+	local sounds: { [number]: Folder } = {}
+
+	for _, v in soundContainer:GetChildren() do
+		local distanceGroup = tonumber(v.Name)
+		assert(distanceGroup, `Invalid name for distant sound group: {v.Name}`)
+
+		sounds[distanceGroup] = v
+	end
+
+	local order: { [number]: number } = {}
+	for i, _ in sounds do
+		order[#order + 1] = i
+	end
+	table.sort(order, function(a, b)
+		return a < b
+	end)
+
+	local sound1
+	local sound2
+	local minDist = -1
+	for index, v: Folder in sounds do
+		if index > minDist and index <= distance then
+			minDist = index
+			sound1 = v
+			local a = table.find(order, tonumber(v.Name) :: number)
+			sound2 = sounds[order[a + 1]]
+		end
+	end
+
+	return sound1, sound2
+end
+
+function Utilities:MuzzleEffect(
+	Handle: Types.WeaponHandle,
+	playSemiSound: boolean,
+	indoorSound: boolean
+)
+	local Muzzle = Handle.Muzzle
+
+	if playSemiSound then
+		local sound
+		if indoorSound then
+			sound = Muzzle.Indoor
+		elseif Muzzle:FindFirstChild("Fire") then
+			sound = Muzzle.Fire
+		end
+
+		if sound then
+			Utilities:PlaySoundAtPosition(sound, Muzzle.WorldPosition)
+		end
+	end
+
+	local isNight = Lighting.ClockTime > 19 or Lighting.ClockTime < 7
+
+	for i, v in Muzzle:GetChildren() do
+		if v:IsA("ParticleEmitter") and v.Name ~= "OverHeat" then
+			v:Emit(
+				v:FindFirstChild("EmitCount") and v.EmitCount.Value
+					or math.random(4, 6)
+			)
+		elseif v:IsA("Light") then
+			v.Enabled = true
+
+			task.delay(
+				Utilities:Random(0.01, 0.06) * (isNight and 1.45 or 0.7),
+				function()
+					v.Enabled = false
+				end
+			)
+		end
+	end
+
+	for i, v in Handle.Chamber:GetChildren() do
+		if v:IsA("ParticleEmitter") and v.Name ~= "OverHeat" then
+			v:Emit(
+				v:FindFirstChild("EmitCount") and v.EmitCount.Value
+					or math.random(4, 6)
+			)
+		elseif v:IsA("Light") then
+			v.Enabled = true
+
+			task.delay(
+				Utilities:Random(0.01, 0.06) * (isNight and 1.45 or 0.7),
+				function()
+					v.Enabled = false
+				end
+			)
+		end
+	end
 end
 
 return Utilities

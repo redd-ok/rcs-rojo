@@ -1,10 +1,10 @@
-local Lighting = game:GetService("Lighting")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local SoundService = game:GetService("SoundService")
 local TweenService = game:GetService("TweenService")
 
 local Engine = ReplicatedStorage.RCS
 
+local Config = require(Engine.RCS_Config)
 local ClientNetwork = require(ReplicatedStorage.RCS.ClientNetwork)
 local Types = require(Engine.Types)
 
@@ -20,6 +20,8 @@ local Variables = require(script.Parent.variables)
 
 local LocalPlayer = game:GetService("Players").LocalPlayer
 local Character = LocalPlayer.Character
+
+local CurrentCamera = workspace.CurrentCamera
 
 local function PlaySFX(sfx: string, _loudness: number?)
 	local loudness = _loudness or 1
@@ -86,32 +88,71 @@ local function LoopingSounds(start, isSemi: boolean)
 	ClientNetwork.WeaponEvents.LoopingSounds_CTS.fire(start)
 
 	if start then
+		local sound
+
 		if
-			Utilities:IsIndoors(Muzzle.WorldPosition, {
+			Muzzle:FindFirstChild("IndoorLoop")
+			and Utilities:IsIndoors(Muzzle.WorldPosition, {
 				Character,
-				workspace.CurrentCamera,
-			}) and Muzzle:FindFirstChild("IndoorLoop")
+				CurrentCamera,
+				workspace.RCS_Workspace.Client,
+				workspace.RCS_Workspace.Server,
+			})
 		then
-			Muzzle.IndoorLoop.Playing = true
-		elseif Muzzle:FindFirstChild("Loop") then
-			Muzzle.Loop.Playing = true
+			sound = Muzzle.IndoorLoop
+		else
+			sound = Muzzle.Loop
+		end
+
+		if Config.SpeedOfSoundEnabled then
+			task.delay(
+				(CurrentCamera.CFrame.Position - Muzzle.WorldPosition).Magnitude
+					/ Config.SpeedOfSound,
+				function()
+					sound.Playing = true
+				end
+			)
+		else
+			sound.Playing = true
 		end
 	else
-		Muzzle.Loop.Playing = false
-		Muzzle.IndoorLoop.Playing = false
+		if Config.SpeedOfSoundEnabled then
+			task.delay(
+				(CurrentCamera.CFrame.Position - Muzzle.WorldPosition).Magnitude
+					/ Config.SpeedOfSound,
+				function()
+					Muzzle.Loop.Playing = false
+
+					if Muzzle:FindFirstChild("IndoorLoop") then
+						Muzzle.IndoorLoop.Playing = false
+					end
+				end
+			)
+		else
+			Muzzle.Loop.Playing = false
+
+			if Muzzle:FindFirstChild("IndoorLoop") then
+				Muzzle.IndoorLoop.Playing = false
+			end
+		end
+
 		if
-			Utilities:IsIndoors(Muzzle.WorldPosition, {
+			Muzzle:FindFirstChild("IndoorLoopTail")
+			and Utilities:IsIndoors(Muzzle.WorldPosition, {
 				Character,
-				workspace.CurrentCamera,
-			}) and Muzzle:FindFirstChild("IndoorLoopTail")
+				CurrentCamera,
+				workspace.RCS_Workspace.Client,
+				workspace.RCS_Workspace.Server,
+			})
 		then
-			Muzzle.IndoorLoopTail:Play()
+			Utilities:PlaySoundAtPosition(
+				Muzzle.IndoorLoopTail,
+				Muzzle.WorldPosition
+			)
 			return
 		end
 
-		if Muzzle:FindFirstChild("LoopTail") then
-			Muzzle.LoopTail:Play()
-		end
+		Utilities:PlaySoundAtPosition(Muzzle.LoopTail, Muzzle.WorldPosition)
 	end
 end
 
@@ -278,111 +319,6 @@ local function Recoil()
 	)
 end
 
-local function MuzzleFX(playSemiSound: boolean, indoorSound: boolean)
-	if
-		not Variables.WeaponInHand
-		or not Variables.WeaponData
-		or not Variables.WeaponTool
-	then
-		return
-	end
-	local Handle = Variables.WeaponInHand.Handle
-	local Muzzle = Handle.Muzzle
-
-	if playSemiSound then
-		local sound
-		if indoorSound then
-			sound = Muzzle.Indoor:Clone()
-		elseif Muzzle:FindFirstChild("Fire") then
-			sound = Muzzle.Fire:Clone()
-		end
-
-		if sound then
-			sound.Parent = Muzzle
-			sound:Play()
-			task.delay(sound.TimeLength / sound.PlaybackSpeed, function()
-				sound:Destroy()
-			end)
-		end
-	end
-
-	local isNight = Lighting.ClockTime > 19 or Lighting.ClockTime < 7
-
-	for i, v in Muzzle:GetChildren() do
-		if v:IsA("ParticleEmitter") and v.Name ~= "OverHeat" then
-			v:Emit(
-				v:FindFirstChild("EmitCount") and v.EmitCount.Value
-					or math.random(4, 6)
-			)
-		elseif v:IsA("Light") then
-			v.Enabled = true
-
-			task.delay(
-				Utilities:Random(0.01, 0.06) * (isNight and 1.45 or 0.7),
-				function()
-					v.Enabled = false
-				end
-			)
-		end
-	end
-
-	for i, v in Handle.Chamber:GetChildren() do
-		if v:IsA("ParticleEmitter") and v.Name ~= "OverHeat" then
-			v:Emit(
-				v:FindFirstChild("EmitCount") and v.EmitCount.Value
-					or math.random(4, 6)
-			)
-		elseif v:IsA("Light") then
-			v.Enabled = true
-
-			task.delay(
-				Utilities:Random(0.01, 0.06) * (isNight and 1.45 or 0.7),
-				function()
-					v.Enabled = false
-				end
-			)
-		end
-	end
-
-	if Variables.WeaponData.Chambered or not Variables.WeaponData.SlideLock then
-		TweenService:Create(
-			Variables.WeaponInHand.Handle.Slide,
-			TweenInfo.new(
-				30 / Variables.WeaponData.ShootRate,
-				Enum.EasingStyle.Linear,
-				Enum.EasingDirection.InOut,
-				0,
-				true,
-				0
-			),
-			{
-				C0 = Variables.WeaponData.SlideEx:Inverse(),
-			}
-		):Play()
-	elseif
-		not Variables.WeaponData.Chambered and Variables.WeaponData.SlideLock
-	then
-		TweenService:Create(
-			Variables.WeaponInHand.Handle.Slide,
-			TweenInfo.new(
-				30 / Variables.WeaponData.ShootRate,
-				Enum.EasingStyle.Linear,
-				Enum.EasingDirection.InOut,
-				0,
-				false,
-				0
-			),
-			{
-				C0 = Variables.WeaponData.SlideEx:Inverse(),
-			}
-		):Play()
-	end
-
-	--Utilities:ShellEject(Handle.Chamber.WorldCFrame, Variables.WeaponTool:GetAttribute("Caliber"))
-
-	States.gunState.OverHeat = 5
-end
-
 local function ADSMesh()
 	if not Variables.WeaponInHand or not Variables.WeaponData then
 		return
@@ -472,7 +408,48 @@ local function DoShoot(isSemi: boolean)
 		Variables.WeaponData.Chambered = false
 	end
 
-	MuzzleFX(playSemiSound, indoorSound)
+	Utilities:MuzzleEffect(
+		Variables.WeaponInHand.Handle,
+		playSemiSound,
+		indoorSound
+	)
+	if Variables.WeaponData.Chambered or not Variables.WeaponData.SlideLock then
+		TweenService:Create(
+			Variables.WeaponInHand.Handle.Slide,
+			TweenInfo.new(
+				30 / Variables.WeaponData.ShootRate,
+				Enum.EasingStyle.Linear,
+				Enum.EasingDirection.InOut,
+				0,
+				true,
+				0
+			),
+			{
+				C0 = Variables.WeaponData.SlideEx:Inverse(),
+			}
+		):Play()
+	elseif
+		not Variables.WeaponData.Chambered and Variables.WeaponData.SlideLock
+	then
+		TweenService:Create(
+			Variables.WeaponInHand.Handle.Slide,
+			TweenInfo.new(
+				30 / Variables.WeaponData.ShootRate,
+				Enum.EasingStyle.Linear,
+				Enum.EasingDirection.InOut,
+				0,
+				false,
+				0
+			),
+			{
+				C0 = Variables.WeaponData.SlideEx:Inverse(),
+			}
+		):Play()
+	end
+
+	--Utilities:ShellEject(Handle.Chamber.WorldCFrame, Variables.WeaponTool:GetAttribute("Caliber"))
+
+	States.gunState.OverHeat = 5
 
 	if
 		Variables.WeaponData.Firemode == 4
@@ -493,7 +470,6 @@ return {
 	RunCheck = RunCheck,
 	Shake = Shake,
 	Recoil = Recoil,
-	MuzzleFX = MuzzleFX,
 	ADSMesh = ADSMesh,
 	DoShoot = DoShoot,
 }

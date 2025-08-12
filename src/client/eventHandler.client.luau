@@ -19,56 +19,9 @@ local Hud = Players.LocalPlayer.PlayerGui:WaitForChild("RCS_Hud")
 
 local SuppressionSpring = Spring.new(Vector2.new(), 42, 0.6)
 
+local CurrentCamera = workspace.CurrentCamera
+
 local NeckCFrames = {}
-
-local function MuzzleFX(
-	WeaponInHand: Types.WeaponInHand,
-	playSemiSound: boolean,
-	indoorSound: boolean
-)
-	local Handle = WeaponInHand.Handle
-	local Tool = WeaponInHand.Parent
-		and WeaponInHand.Parent:FindFirstChildOfClass("Tool")
-	local Muzzle = Handle.Muzzle :: BasePart & {
-		Indoor: Sound,
-		Fire: Sound,
-	}
-
-	if not Tool then
-		return
-	end
-
-	if playSemiSound then
-		local sound
-		if indoorSound then
-			sound = Muzzle.Indoor:Clone()
-		elseif Muzzle:FindFirstChild("Fire") then
-			sound = Muzzle.Fire:Clone()
-		end
-
-		if sound then
-			sound.Parent = Muzzle
-			sound:Play()
-			task.delay(sound.TimeLength / sound.PlaybackSpeed, function()
-				sound:Destroy()
-			end)
-		end
-	end
-
-	for i, v in Muzzle:GetChildren() do
-		if v:IsA("ParticleEmitter") and v.Name ~= "OverHeat" then
-			v:Emit(
-				v:FindFirstChild("EmitCount") and v.EmitCount.Value
-					or math.random(4, 6)
-			)
-		elseif v:IsA("Light") then
-			v.Enabled = true
-			task.delay(Utilities:Random(0.01, 0.06) * 1.35, function()
-				v.Enabled = false
-			end)
-		end
-	end
-end
 
 function ProjectileV2:ProjectileHit(raycastResult, projectile, velocity)
 	if
@@ -191,10 +144,10 @@ ClientNetwork.WeaponEvents.Shoot_STC.on(function(owner, data)
 			owner
 		)
 
-		MuzzleFX(
+		Utilities:MuzzleEffect(
 			(data.tool.Parent :: Model):FindFirstChild(
 					"S_" .. data.tool.Name
-				) :: Types.WeaponInHand,
+				) :: Types.WeaponHandle,
 			data.playSemiSound,
 			data.indoorSound
 		)
@@ -557,19 +510,47 @@ ClientNetwork.WeaponEvents.LoopingSounds_STC.on(function(owner, start)
 	local Muzzle = Handle.Muzzle
 
 	if start then
+		local sound
+
 		if
 			Muzzle:FindFirstChild("IndoorLoop")
 			and Utilities:IsIndoors(Muzzle.WorldPosition, { owner.Character })
 		then
-			Muzzle.IndoorLoop.Playing = true
+			sound = Muzzle.IndoorLoop
 		else
-			Muzzle.Loop.Playing = true
+			sound = Muzzle.Loop
+		end
+
+		if Config.SpeedOfSoundEnabled then
+			task.delay(
+				(CurrentCamera.CFrame.Position - Muzzle.WorldPosition).Magnitude
+					/ Config.SpeedOfSound,
+				function()
+					sound.Playing = true
+				end
+			)
+		else
+			sound.Playing = true
 		end
 	else
-		Muzzle.Loop.Playing = false
+		if Config.SpeedOfSoundEnabled then
+			task.delay(
+				(CurrentCamera.CFrame.Position - Muzzle.WorldPosition).Magnitude
+					/ Config.SpeedOfSound,
+				function()
+					Muzzle.Loop.Playing = false
 
-		if Muzzle:FindFirstChild("IndoorLoop") then
-			Muzzle.IndoorLoop.Playing = false
+					if Muzzle:FindFirstChild("IndoorLoop") then
+						Muzzle.IndoorLoop.Playing = false
+					end
+				end
+			)
+		else
+			Muzzle.Loop.Playing = false
+
+			if Muzzle:FindFirstChild("IndoorLoop") then
+				Muzzle.IndoorLoop.Playing = false
+			end
 		end
 
 		if
@@ -578,11 +559,14 @@ ClientNetwork.WeaponEvents.LoopingSounds_STC.on(function(owner, start)
 				owner.Character,
 			})
 		then
-			Muzzle.IndoorLoopTail:Play()
+			Utilities:PlaySoundAtPosition(
+				Muzzle.IndoorLoopTail,
+				Muzzle.WorldPosition
+			)
 			return
 		end
 
-		Muzzle.LoopTail:Play()
+		Utilities:PlaySoundAtPosition(Muzzle.LoopTail, Muzzle.WorldPosition)
 	end
 end)
 

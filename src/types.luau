@@ -218,6 +218,7 @@ export type WeaponMuzzle = Attachment & {
 }
 export type WeaponHandle = BasePart & {
 	Muzzle: WeaponMuzzle,
+	Chamber: Attachment,
 	Slide: Motor6D,
 }
 export type WeaponInHand = Model & {
