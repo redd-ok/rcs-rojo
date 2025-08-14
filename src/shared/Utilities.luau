@@ -359,7 +359,7 @@ function Utilities:GetDistantWeaponSounds(
 	soundContainer: Folder,
 	distance: number
 )
-	local sounds: { [number]: Folder } = {}
+	local sounds: { [number]: Folder? } = {}
 
 	for _, v in soundContainer:GetChildren() do
 		local distanceGroup = tonumber(v.Name)
@@ -379,7 +379,7 @@ function Utilities:GetDistantWeaponSounds(
 	local sound1
 	local sound2
 	local minDist = -1
-	for index, v: Folder in sounds do
+	for index, v in sounds do
 		if index > minDist and index <= distance then
 			minDist = index
 			sound1 = v
@@ -397,17 +397,62 @@ function Utilities:MuzzleEffect(
 	indoorSound: boolean
 )
 	local Muzzle = Handle.Muzzle
+	local DistanceFromCaemra = (
+		CurrentCamera.CFrame.Position - Muzzle.WorldPosition
+	).Magnitude
 
 	if playSemiSound then
-		local sound
+		local sound: Sound
+		local sound2: Sound
+		local soundsFolder: Folder?, sounds2Folder: Folder?
 		if indoorSound then
-			sound = Muzzle.Indoor
+			if Muzzle:FindFirstChild("IndoorDistant") then
+				soundsFolder, sounds2Folder = Utilities:GetDistantWeaponSounds(
+					Muzzle.IndoorDistant,
+					DistanceFromCaemra
+				)
+			end
+
+			if not soundsFolder and not sounds2Folder then
+				sound = Muzzle.Indoor
+			end
 		elseif Muzzle:FindFirstChild("Fire") then
-			sound = Muzzle.Fire
+			if Muzzle:FindFirstChild("Distant") then
+				soundsFolder, sounds2Folder = Utilities:GetDistantWeaponSounds(
+					Muzzle.Distant,
+					DistanceFromCaemra
+				)
+			end
+
+			if not soundsFolder and not sounds2Folder then
+				sound = Muzzle.Fire
+			end
+		end
+
+		if soundsFolder or sounds2Folder then
+			local sounds, sounds2 =
+				soundsFolder and soundsFolder:GetChildren(),
+				sounds2Folder and sounds2Folder:GetChildren()
+
+			sound, sound2 =
+				sounds and sounds[math.random(1, #sounds)],
+				sounds2 and sounds2[math.random(1, #sounds)]
+
+			if sound and sound2 and sounds2Folder then
+				sound.Volume = sound.Volume
+					- sound.Volume
+						* (DistanceFromCaemra / tonumber(sounds2Folder.Name))
+				sound2.Volume = sound2.Volume
+					* (DistanceFromCaemra / tonumber(sounds2Folder.Name))
+			end
 		end
 
 		if sound then
 			Utilities:PlaySoundAtPosition(sound, Muzzle.WorldPosition)
+		end
+
+		if sound2 then
+			Utilities:PlaySoundAtPosition(sound2, Muzzle.WorldPosition)
 		end
 	end
 
