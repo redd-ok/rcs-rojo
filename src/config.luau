@@ -12,7 +12,7 @@ return {
 	ServersideProjectiles = false, -- should bullets be server-sided (may cause hit-reg issues, should only enable because of cheaters)
 
 	SpeedOfSoundEnabled = true, -- should gun shots have speed of sound
-	SpeedOfSound = 343, -- how fast should sound travel in studs/second
+	SpeedOfSound = 343 / 0.28, -- how fast should sound travel in studs/second
 
 	Debug = true,
 	DebugGUI = Enum.KeyCode.RightShift,

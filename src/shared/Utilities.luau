@@ -308,25 +308,41 @@ function Utilities:FindProjectileConfig(projectileName: string): Types.Caliber
 	return calibers_flattened[projectileName]
 end
 
-function Utilities:HasLoopingSounds(instance: Instance)
-	return (
-		instance:FindFirstChild("Loop")
-		or instance:FindFirstChild("LoopTail")
-		or instance:FindFirstChild("IndoorLoop")
-		or instance:FindFirstChild("IndoorLoopTail")
-	) ~= nil
+function Utilities:HasLoopingSounds(muzzle: Attachment)
+	local isIndoors = Utilities:IsIndoors(
+		muzzle.WorldPosition,
+		{ (muzzle :: any).Parent.Parent.Parent }
+	)
+
+	return if isIndoors
+		then muzzle:FindFirstChild("IndoorLoop") ~= nil
+		else muzzle:FindFirstChild("Loop") ~= nil
 end
-function Utilities:HasSingleSounds(instance: Instance)
-	return (
-		instance:FindFirstChild("Fire") or instance:FindFirstChild("Indoor")
-	) ~= nil
+function Utilities:HasSingleSounds(muzzle: Attachment)
+	local isIndoors = Utilities:IsIndoors(
+		muzzle.WorldPosition,
+		{ (muzzle :: any).Parent.Parent.Parent }
+	)
+
+	return if isIndoors
+		then muzzle:FindFirstChild("IndoorLoop") ~= nil or muzzle:FindFirstChild(
+			"IndoorDistant"
+		)
+		else muzzle:FindFirstChild("Fire") ~= nil or muzzle:FindFirstChild(
+			"Distant"
+		)
 end
 
-function Utilities:PlaySoundAtPosition(sound: Sound, position: Vector3)
+function Utilities:PlaySoundAtPosition(
+	sound: Sound,
+	position: Vector3,
+	volume: number?
+)
 	local soundCloned = sound:Clone()
 	local attachment = Instance.new("Attachment")
 	attachment.Parent = workspace.Terrain
 	soundCloned.Parent = attachment
+	soundCloned.Volume = volume or soundCloned.Volume
 
 	attachment.WorldPosition = position
 
@@ -413,10 +429,14 @@ function Utilities:MuzzleEffect(
 				)
 			end
 
-			if not soundsFolder and not sounds2Folder then
+			if
+				not soundsFolder
+				and not sounds2Folder
+				and Muzzle:FindFirstChild("Indoor")
+			then
 				sound = Muzzle.Indoor
 			end
-		elseif Muzzle:FindFirstChild("Fire") then
+		else
 			if Muzzle:FindFirstChild("Distant") then
 				soundsFolder, sounds2Folder = Utilities:GetDistantWeaponSounds(
 					Muzzle.Distant,
@@ -424,11 +444,16 @@ function Utilities:MuzzleEffect(
 				)
 			end
 
-			if not soundsFolder and not sounds2Folder then
+			if
+				not soundsFolder
+				and not sounds2Folder
+				and Muzzle:FindFirstChild("Fire")
+			then
 				sound = Muzzle.Fire
 			end
 		end
 
+		local soundVolume, sound2Volume
 		if soundsFolder or sounds2Folder then
 			local sounds, sounds2 =
 				soundsFolder and soundsFolder:GetChildren(),
@@ -439,20 +464,28 @@ function Utilities:MuzzleEffect(
 				sounds2 and sounds2[math.random(1, #sounds)]
 
 			if sound and sound2 and sounds2Folder then
-				sound.Volume = sound.Volume
+				soundVolume = sound.Volume
 					- sound.Volume
 						* (DistanceFromCaemra / tonumber(sounds2Folder.Name))
-				sound2.Volume = sound2.Volume
+				sound2Volume = sound2.Volume
 					* (DistanceFromCaemra / tonumber(sounds2Folder.Name))
 			end
 		end
 
 		if sound then
-			Utilities:PlaySoundAtPosition(sound, Muzzle.WorldPosition)
+			Utilities:PlaySoundAtPosition(
+				sound,
+				Muzzle.WorldPosition,
+				soundVolume
+			)
 		end
 
 		if sound2 then
-			Utilities:PlaySoundAtPosition(sound2, Muzzle.WorldPosition)
+			Utilities:PlaySoundAtPosition(
+				sound2,
+				Muzzle.WorldPosition,
+				sound2Volume
+			)
 		end
 	end
 

@@ -80,7 +80,9 @@ local function LoopingSounds(start, isSemi: boolean)
 
 	if
 		not Utilities:HasLoopingSounds(Muzzle)
-		or isSemi and Utilities:HasSingleSounds(Muzzle)
+		or isSemi
+			and Utilities:HasSingleSounds(Muzzle)
+			and Utilities:HasLoopingSounds(Muzzle)
 	then
 		return
 	end
