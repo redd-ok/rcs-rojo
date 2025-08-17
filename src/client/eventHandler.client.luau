@@ -144,10 +144,11 @@ ClientNetwork.WeaponEvents.Shoot_STC.on(function(owner, data)
 			owner
 		)
 
+		local weaponModel = (data.tool.Parent :: Model):FindFirstChild(
+			"S_" .. data.tool.Name
+		) :: Types.WeaponInHand
 		Utilities:MuzzleEffect(
-			(data.tool.Parent :: Model):FindFirstChild(
-					"S_" .. data.tool.Name
-				) :: Types.WeaponHandle,
+			weaponModel.Handle,
 			data.playSemiSound,
 			data.indoorSound
 		)
