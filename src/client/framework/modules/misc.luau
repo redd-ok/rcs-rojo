@@ -4,7 +4,6 @@ local TweenService = game:GetService("TweenService")
 
 local Engine = ReplicatedStorage.RCS
 
-local Config = require(Engine.RCS_Config)
 local ClientNetwork = require(ReplicatedStorage.RCS.ClientNetwork)
 local Types = require(Engine.Types)
 
@@ -20,8 +19,6 @@ local Variables = require(script.Parent.variables)
 
 local LocalPlayer = game:GetService("Players").LocalPlayer
 local Character = LocalPlayer.Character
-
-local CurrentCamera = workspace.CurrentCamera
 
 local function PlaySFX(sfx: string, _loudness: number?)
 	local loudness = _loudness or 1
@@ -89,73 +86,7 @@ local function LoopingSounds(start, isSemi: boolean)
 
 	ClientNetwork.WeaponEvents.LoopingSounds_CTS.fire(start)
 
-	if start then
-		local sound
-
-		if
-			Muzzle:FindFirstChild("IndoorLoop")
-			and Utilities:IsIndoors(Muzzle.WorldPosition, {
-				Character,
-				CurrentCamera,
-				workspace.RCS_Workspace.Client,
-				workspace.RCS_Workspace.Server,
-			})
-		then
-			sound = Muzzle.IndoorLoop
-		else
-			sound = Muzzle.Loop
-		end
-
-		if Config.SpeedOfSoundEnabled then
-			task.delay(
-				(CurrentCamera.CFrame.Position - Muzzle.WorldPosition).Magnitude
-					/ Config.SpeedOfSound,
-				function()
-					sound.Playing = true
-				end
-			)
-		else
-			sound.Playing = true
-		end
-	else
-		if Config.SpeedOfSoundEnabled then
-			task.delay(
-				(CurrentCamera.CFrame.Position - Muzzle.WorldPosition).Magnitude
-					/ Config.SpeedOfSound,
-				function()
-					Muzzle.Loop.Playing = false
-
-					if Muzzle:FindFirstChild("IndoorLoop") then
-						Muzzle.IndoorLoop.Playing = false
-					end
-				end
-			)
-		else
-			Muzzle.Loop.Playing = false
-
-			if Muzzle:FindFirstChild("IndoorLoop") then
-				Muzzle.IndoorLoop.Playing = false
-			end
-		end
-
-		if
-			Muzzle:FindFirstChild("IndoorLoopTail")
-			and Utilities:IsIndoors(Muzzle.WorldPosition, {
-				Character,
-				CurrentCamera,
-				workspace.RCS_Workspace.Client,
-				workspace.RCS_Workspace.Server,
-			})
-		then
-			Utilities:PlaySoundAtPosition(
-				Muzzle.IndoorLoopTail,
-				Muzzle.WorldPosition
-			)
-			return
-		end
-
-		Utilities:PlaySoundAtPosition(Muzzle.LoopTail, Muzzle.WorldPosition)
-	end
+	Utilities:LoopingSounds(Muzzle, start)
 end
 
 local function UpdateServerStance()
@@ -378,13 +309,28 @@ local function DoShoot(isSemi: boolean)
 		0
 	) * CFrame.Angles(math.rad(VerticalBulletSpread / 60), 0, 0)
 
-	local id = ProjectileV2:GetId()
-	ProjectileV2:Spawn(
-		Variables.WeaponInHand.Handle.Muzzle.WorldCFrame * BulletSpread,
-		(Variables.WeaponTool :: Tool):GetAttribute("Caliber") :: string,
-		LocalPlayer,
-		id
-	)
+	for _ = 1, Variables.WeaponData.Bullets do
+		local id = ProjectileV2:GetId()
+		ProjectileV2:Spawn(
+			Variables.WeaponInHand.Handle.Muzzle.WorldCFrame * BulletSpread,
+			(Variables.WeaponTool :: Tool):GetAttribute("Caliber") :: string,
+			LocalPlayer,
+			id
+		)
+
+		ClientNetwork.WeaponEvents.Shoot_CTS.fire({
+			id = id,
+			position = Muzzle.WorldCFrame * BulletSpread,
+			tool = Variables.WeaponTool :: Tool,
+		})
+	end
+
+	PlaySFX("Trigger")
+
+	Variables.WeaponData.AmmoInGun -= 1
+	if Variables.WeaponData.AmmoInGun == 0 then
+		Variables.WeaponData.Chambered = false
+	end
 
 	local playSemiSound = not Utilities:HasLoopingSounds(Muzzle)
 		or isSemi and Utilities:HasSingleSounds(Muzzle)
@@ -395,26 +341,18 @@ local function DoShoot(isSemi: boolean)
 			workspace.CurrentCamera,
 		})
 
-	ClientNetwork.WeaponEvents.Shoot_CTS.fire({
-		id = id,
-		position = Muzzle.WorldCFrame * BulletSpread,
-		tool = Variables.WeaponTool :: Tool,
-		playSemiSound = playSemiSound,
-		indoorSound = indoorSound,
-	})
-
-	PlaySFX("Trigger")
-
-	Variables.WeaponData.AmmoInGun -= 1
-	if Variables.WeaponData.AmmoInGun == 0 then
-		Variables.WeaponData.Chambered = false
-	end
-
 	Utilities:MuzzleEffect(
 		Variables.WeaponInHand.Handle,
 		playSemiSound,
 		indoorSound
 	)
+
+	ClientNetwork.WeaponEvents.MuzzleEffect_CTS.fire({
+		tool = Variables.WeaponTool,
+		playSemiSound = playSemiSound,
+		indoorSound = indoorSound,
+	})
+
 	if Variables.WeaponData.Chambered or not Variables.WeaponData.SlideLock then
 		TweenService:Create(
 			Variables.WeaponInHand.Handle.Slide,

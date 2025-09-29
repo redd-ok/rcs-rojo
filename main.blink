@@ -24,8 +24,6 @@ scope WeaponEvents {
             tool: Instance(Tool)?,
             position: CFrame<f32, f32>,
             id: u16,
-            playSemiSound: boolean,
-            indoorSound: boolean,
         }
     }
 
@@ -38,10 +36,30 @@ scope WeaponEvents {
             struct {
                 tool: Instance(Tool)?,
                 position: CFrame<f32, f32>,
-                playSemiSound: boolean,
-                indoorSound: boolean,
             }
         )
+    }
+
+    event MuzzleEffect_CTS {
+        From: Client,
+        Type: Reliable,
+        Call: SingleSync,
+        Data: struct {
+            tool: Instance(Tool)?,
+            playSemiSound: boolean,
+            indoorSound: boolean,
+        }
+    }
+
+    event MuzzleEffect_STC {
+        From: Server,
+        Type: Reliable,
+        Call: SingleSync,
+        Data: struct {
+            tool: Instance(Tool)?,
+            playSemiSound: boolean,
+            indoorSound: boolean,
+        }
     }
 
     event ProjectileHit {

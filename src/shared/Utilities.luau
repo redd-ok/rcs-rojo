@@ -1,5 +1,6 @@
 local Lighting = game:GetService("Lighting")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
 
 local RCS = ReplicatedStorage.RCS
 
@@ -315,8 +316,12 @@ function Utilities:HasLoopingSounds(muzzle: Attachment)
 	)
 
 	return if isIndoors
-		then muzzle:FindFirstChild("IndoorLoop") ~= nil
-		else muzzle:FindFirstChild("Loop") ~= nil
+		then muzzle:FindFirstChild("IndoorLoop") ~= nil or muzzle:FindFirstChild(
+			"IndoorLoopDistant"
+		) ~= nil
+		else muzzle:FindFirstChild("Loop") ~= nil or muzzle:FindFirstChild(
+			"LoopDistant"
+		) ~= nil
 end
 function Utilities:HasSingleSounds(muzzle: Attachment)
 	local isIndoors = Utilities:IsIndoors(
@@ -327,47 +332,73 @@ function Utilities:HasSingleSounds(muzzle: Attachment)
 	return if isIndoors
 		then muzzle:FindFirstChild("IndoorLoop") ~= nil or muzzle:FindFirstChild(
 			"IndoorDistant"
-		)
+		) ~= nil
 		else muzzle:FindFirstChild("Fire") ~= nil or muzzle:FindFirstChild(
 			"Distant"
-		)
+		) ~= nil
 end
 
 function Utilities:PlaySoundAtPosition(
 	sound: Sound,
 	position: Vector3,
-	volume: number?
-)
+	options: {
+		volume: number?,
+		useSpeedOfSound: boolean?,
+		parent: BasePart?,
+	}?
+): () -> ()
+	local volume = options and options.volume
+	local useSpeedOfSound = if options
+			and options.useSpeedOfSound ~= nil
+		then options.useSpeedOfSound
+		else Config.SpeedOfSoundEnabled
+	local attachmentParent = options and options.parent or workspace.Terrain
+
 	local soundCloned = sound:Clone()
 	local attachment = Instance.new("Attachment")
-	attachment.Parent = workspace.Terrain
+	attachment.Parent = attachmentParent
 	soundCloned.Parent = attachment
 	soundCloned.Volume = volume or soundCloned.Volume
 
 	attachment.WorldPosition = position
 
-	if Config.SpeedOfSoundEnabled then
-		task.delay(
+	if
+		useSpeedOfSound ~= nil and useSpeedOfSound
+		or useSpeedOfSound == nil and Config.SpeedOfSoundEnabled
+	then
+		local thread1
+		local thread0 = task.delay(
 			(CurrentCamera.CFrame.Position - position).Magnitude
 				/ Config.SpeedOfSound,
 			function()
 				soundCloned:Play()
-				task.delay(
+				thread1 = task.delay(
 					soundCloned.TimeLength / soundCloned.PlaybackSpeed,
 					function()
-						soundCloned:Destroy()
+						attachment:Destroy()
 					end
 				)
 			end
 		)
+
+		return function()
+			task.cancel(thread1)
+			task.cancel(thread0)
+			attachment:Destroy()
+		end
 	else
 		soundCloned:Play()
-		task.delay(
+		local thread = task.delay(
 			soundCloned.TimeLength / soundCloned.PlaybackSpeed,
 			function()
 				soundCloned:Destroy()
 			end
 		)
+
+		return function()
+			task.cancel(thread)
+			attachment:Destroy()
+		end
 	end
 end
 
@@ -466,9 +497,17 @@ function Utilities:MuzzleEffect(
 			if sound and sound2 and sounds2Folder then
 				soundVolume = sound.Volume
 					- sound.Volume
-						* (DistanceFromCaemra / tonumber(sounds2Folder.Name))
+						* math.clamp(
+							DistanceFromCaemra / tonumber(sounds2Folder.Name),
+							0,
+							1
+						)
 				sound2Volume = sound2.Volume
-					* (DistanceFromCaemra / tonumber(sounds2Folder.Name))
+					* math.clamp(
+						DistanceFromCaemra / tonumber(sounds2Folder.Name),
+						0,
+						1
+					)
 			end
 		end
 
@@ -476,7 +515,7 @@ function Utilities:MuzzleEffect(
 			Utilities:PlaySoundAtPosition(
 				sound,
 				Muzzle.WorldPosition,
-				soundVolume
+				{ volume = soundVolume }
 			)
 		end
 
@@ -484,7 +523,7 @@ function Utilities:MuzzleEffect(
 			Utilities:PlaySoundAtPosition(
 				sound2,
 				Muzzle.WorldPosition,
-				sound2Volume
+				{ volume = sound2Volume }
 			)
 		end
 	end
@@ -524,6 +563,213 @@ function Utilities:MuzzleEffect(
 					v.Enabled = false
 				end
 			)
+		end
+	end
+end
+
+local loopingSoundThreads: { [Types.WeaponMuzzle]: thread } = {}
+local loopingSounds: { [Types.WeaponMuzzle]: { () -> () } } = {}
+function Utilities:LoopingSounds(Muzzle: Types.WeaponMuzzle, start: boolean)
+	if start then
+		local DistanceFromCamera = (
+			CurrentCamera.CFrame.Position - Muzzle.WorldPosition
+		).Magnitude
+		print(DistanceFromCamera)
+
+		local sound: Sound? = nil
+		local soundsFolder: Folder?, sounds2Folder: Folder?
+
+		if
+			(
+				Muzzle:FindFirstChild("IndoorLoop")
+				or Muzzle:FindFirstChild("IndoorLoopDistant")
+			)
+			and Utilities:IsIndoors(Muzzle.WorldPosition, {
+				Players.LocalPlayer.Character,
+				CurrentCamera,
+				workspace.RCS_Workspace.Client,
+				workspace.RCS_Workspace.Server,
+			})
+		then
+			if Muzzle:FindFirstChild("IndoorLoopDistant") then
+				soundsFolder, sounds2Folder = Utilities:GetDistantWeaponSounds(
+					Muzzle.IndoorLoopDistant,
+					DistanceFromCamera
+				)
+			end
+
+			if not soundsFolder and not sounds2Folder then
+				sound = Muzzle.IndoorLoop
+			end
+		else
+			if Muzzle:FindFirstChild("LoopDistant") then
+				soundsFolder, sounds2Folder = Utilities:GetDistantWeaponSounds(
+					Muzzle.LoopDistant,
+					DistanceFromCamera
+				)
+			end
+
+			if not soundsFolder and not sounds2Folder then
+				sound = Muzzle.Loop
+			end
+		end
+
+		local sounds, sounds2 =
+			soundsFolder and (soundsFolder:GetChildren() :: any) :: { Sound },
+			sounds2Folder and (sounds2Folder:GetChildren() :: any) :: { Sound }
+
+		if sounds or sounds2 then
+			Muzzle:SetAttribute("PlayingDistantLoopingSound", true)
+
+			local function loopingSound()
+				if not Muzzle:GetAttribute("PlayingDistantLoopingSound") then
+					loopingSoundThreads[Muzzle] = nil
+					return
+				end
+
+				DistanceFromCamera = (
+					CurrentCamera.CFrame.Position - Muzzle.WorldPosition
+				).Magnitude
+
+				local sound, sound2 =
+					sounds and sounds[math.random(1, #sounds)],
+					sounds2 and sounds2[math.random(1, #sounds)]
+
+				local volumeMultiplier = if sounds2Folder
+					then math.clamp(
+						DistanceFromCamera / tonumber(sounds2Folder.Name),
+						0,
+						1
+					)
+					else 0
+
+				local soundVolume = sound.Volume
+					- sound.Volume * volumeMultiplier
+				local sound2Volume = sound2 and sound2.Volume * volumeMultiplier
+
+				loopingSounds[Muzzle] = {}
+
+				loopingSounds[Muzzle][1] =
+					Utilities:PlaySoundAtPosition(sound, Muzzle.WorldPosition, {
+						volume = soundVolume,
+						useSpeedOfSound = false,
+						parent = Muzzle,
+					})
+				if sound2 then
+					loopingSounds[Muzzle][2] = Utilities:PlaySoundAtPosition(
+						sound2,
+						Muzzle.WorldPosition,
+						{
+							volume = sound2Volume,
+							useSpeedOfSound = false,
+							parent = Muzzle,
+						}
+					)
+				end
+
+				if
+					not sound2
+					or sound.TimeLength / sound.PlaybackSpeed
+						< sound2.TimeLength / sound2.PlaybackSpeed
+				then
+					loopingSoundThreads[Muzzle] = task.delay(
+						(sound.TimeLength / sound.PlaybackSpeed),
+						loopingSound
+					)
+				else
+					loopingSoundThreads[Muzzle] = task.delay(
+						(sound2.TimeLength / sound2.PlaybackSpeed),
+						loopingSound
+					)
+				end
+			end
+
+			if Config.SpeedOfSoundEnabled then
+				task.delay(
+					DistanceFromCamera / Config.SpeedOfSound,
+					loopingSound
+				)
+			else
+				loopingSound()
+			end
+		elseif sound then
+			if Config.SpeedOfSoundEnabled then
+				task.delay(DistanceFromCamera / Config.SpeedOfSound, function()
+					sound.Playing = true
+				end)
+			else
+				sound.Playing = true
+			end
+		end
+	else
+		if Config.SpeedOfSoundEnabled then
+			task.delay(
+				(CurrentCamera.CFrame.Position - Muzzle.WorldPosition).Magnitude
+					/ Config.SpeedOfSound,
+				function()
+					if Muzzle:FindFirstChild("Loop") then
+						Muzzle.Loop.Playing = false
+					end
+
+					Muzzle:SetAttribute("PlayingDistantLoopingSound", false)
+					if loopingSoundThreads[Muzzle] then
+						task.cancel(loopingSoundThreads[Muzzle])
+						loopingSoundThreads[Muzzle] = nil
+					end
+					if loopingSounds[Muzzle] then
+						for _, v in loopingSounds[Muzzle] do
+							v()
+						end
+
+						loopingSounds[Muzzle] = nil
+					end
+
+					if Muzzle:FindFirstChild("IndoorLoop") then
+						Muzzle.IndoorLoop.Playing = false
+					end
+				end
+			)
+		else
+			if Muzzle:FindFirstChild("Loop") then
+				Muzzle.Loop.Playing = false
+			end
+
+			Muzzle:SetAttribute("PlayingDistantLoopingSound", false)
+			if loopingSoundThreads[Muzzle] then
+				task.cancel(loopingSoundThreads[Muzzle])
+				loopingSoundThreads[Muzzle] = nil
+			end
+			if loopingSounds[Muzzle] then
+				for _, v in loopingSounds[Muzzle] do
+					v()
+				end
+
+				loopingSounds[Muzzle] = nil
+			end
+
+			if Muzzle:FindFirstChild("IndoorLoop") then
+				Muzzle.IndoorLoop.Playing = false
+			end
+		end
+
+		if
+			Muzzle:FindFirstChild("IndoorLoopTail")
+			and Utilities:IsIndoors(Muzzle.WorldPosition, {
+				Players.LocalPlayer.Character,
+				CurrentCamera,
+				workspace.RCS_Workspace.Client,
+				workspace.RCS_Workspace.Server,
+			})
+		then
+			Utilities:PlaySoundAtPosition(
+				Muzzle.IndoorLoopTail,
+				Muzzle.WorldPosition
+			)
+			return
+		end
+
+		if Muzzle:FindFirstChild("LoopTail") then
+			Utilities:PlaySoundAtPosition(Muzzle.LoopTail, Muzzle.WorldPosition)
 		end
 	end
 end

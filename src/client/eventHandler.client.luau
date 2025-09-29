@@ -19,8 +19,6 @@ local Hud = Players.LocalPlayer.PlayerGui:WaitForChild("RCS_Hud")
 
 local SuppressionSpring = Spring.new(Vector2.new(), 42, 0.6)
 
-local CurrentCamera = workspace.CurrentCamera
-
 local NeckCFrames = {}
 
 function ProjectileV2:ProjectileHit(raycastResult, projectile, velocity)
@@ -143,16 +141,18 @@ ClientNetwork.WeaponEvents.Shoot_STC.on(function(owner, data)
 			data.tool:GetAttribute("Caliber"),
 			owner
 		)
-
-		local weaponModel = (data.tool.Parent :: Model):FindFirstChild(
-			"S_" .. data.tool.Name
-		) :: Types.WeaponInHand
-		Utilities:MuzzleEffect(
-			weaponModel.Handle,
-			data.playSemiSound,
-			data.indoorSound
-		)
 	end
+end)
+
+ClientNetwork.WeaponEvents.MuzzleEffect_STC.on(function(data)
+	local weaponModel = (data.tool.Parent :: Model):FindFirstChild(
+		"S_" .. data.tool.Name
+	) :: Types.WeaponInHand
+	Utilities:MuzzleEffect(
+		weaponModel.Handle,
+		data.playSemiSound,
+		data.indoorSound
+	)
 end)
 
 ClientNetwork.CharacterEvents.HeadReplication_STC.on(function(owner, neckCFrame)
@@ -510,65 +510,7 @@ ClientNetwork.WeaponEvents.LoopingSounds_STC.on(function(owner, start)
 	local Handle = WeaponInHand.Handle
 	local Muzzle = Handle.Muzzle
 
-	if start then
-		local sound
-
-		if
-			Muzzle:FindFirstChild("IndoorLoop")
-			and Utilities:IsIndoors(Muzzle.WorldPosition, { owner.Character })
-		then
-			sound = Muzzle.IndoorLoop
-		else
-			sound = Muzzle.Loop
-		end
-
-		if Config.SpeedOfSoundEnabled then
-			task.delay(
-				(CurrentCamera.CFrame.Position - Muzzle.WorldPosition).Magnitude
-					/ Config.SpeedOfSound,
-				function()
-					sound.Playing = true
-				end
-			)
-		else
-			sound.Playing = true
-		end
-	else
-		if Config.SpeedOfSoundEnabled then
-			task.delay(
-				(CurrentCamera.CFrame.Position - Muzzle.WorldPosition).Magnitude
-					/ Config.SpeedOfSound,
-				function()
-					Muzzle.Loop.Playing = false
-
-					if Muzzle:FindFirstChild("IndoorLoop") then
-						Muzzle.IndoorLoop.Playing = false
-					end
-				end
-			)
-		else
-			Muzzle.Loop.Playing = false
-
-			if Muzzle:FindFirstChild("IndoorLoop") then
-				Muzzle.IndoorLoop.Playing = false
-			end
-		end
-
-		if
-			Muzzle:FindFirstChild("IndoorLoopTail")
-			and Utilities:IsIndoors(Muzzle.WorldPosition, {
-				owner.Character,
-			})
-		then
-			Utilities:PlaySoundAtPosition(
-				Muzzle.IndoorLoopTail,
-				Muzzle.WorldPosition
-			)
-			return
-		end
-
-		Utilities:PlaySoundAtPosition(Muzzle.LoopTail, Muzzle.WorldPosition)
-	end
+	Utilities:LoopingSounds(Muzzle, start)
 end)
 
 local Suppression = {

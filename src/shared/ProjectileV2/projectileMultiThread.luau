@@ -34,14 +34,22 @@ end
 
 local ProjectilesContainer
 local TracerCache
+local TracerContainer
 if IsClient then
 	ProjectilesContainer =
 		workspace.RCS_Workspace.Client:FindFirstChild("__PROJECTILES_CONTAINER")
+	TracerContainer =
+		workspace.Terrain:FindFirstChild("__RCS_TRACERS_CONTAINER")
 	TracerCache = {}
 	if not ProjectilesContainer then
 		ProjectilesContainer =
 			Instance.new("Folder", workspace.RCS_Workspace.Client)
 		ProjectilesContainer.Name = "__PROJECTILES_CONTAINER"
+	end
+
+	if not TracerContainer then
+		ProjectilesContainer = Instance.new("Folder", workspace.Terrain)
+		ProjectilesContainer.Name = "__RCS_TRACERS_CONTAINER"
 	end
 end
 
@@ -68,11 +76,11 @@ if IsClient then
 		duplicate.Parent = ProjectilesContainer
 		projectileMultiThread.cachedInstances[i] = duplicate
 
-		local attach0 = Instance.new("Attachment", workspace.Terrain)
-		local attach1 = Instance.new("Attachment", workspace.Terrain)
+		local attach0 = Instance.new("Attachment", TracerContainer)
+		local attach1 = Instance.new("Attachment", TracerContainer)
 		attach0.CFrame = VERY_FAR_CFRAME
 		attach1.CFrame = VERY_FAR_CFRAME
-		local beam = Instance.new("Beam", workspace.Terrain)
+		local beam = Instance.new("Beam", TracerContainer)
 		beam.Attachment0 = attach0
 		beam.Attachment1 = attach1
 		beam.Enabled = true

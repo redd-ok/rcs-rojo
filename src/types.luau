@@ -210,9 +210,17 @@ export type WeaponMuzzle = Attachment & {
 	Outdoor: Sound,
 	Fire: Sound,
 
-	OutdoorLoop: Sound,
-	IndoorLoop: Sound,
 	Loop: Sound,
+	LoopTail: Sound,
+	IndoorLoop: Sound,
+	IndoorLoopTail: Sound,
+
+	Distant: Folder,
+	IndoorDistant: Folder,
+	LoopDistant: Folder,
+	LoopDistantTail: Folder,
+	IndoorLoopDistant: Folder,
+	IndoorLoopDistantTail: Folder,
 
 	OverHeat: ParticleEmitter,
 }
