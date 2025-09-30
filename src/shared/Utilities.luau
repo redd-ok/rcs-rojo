@@ -382,7 +382,9 @@ function Utilities:PlaySoundAtPosition(
 		)
 
 		return function()
-			task.cancel(thread1)
+			if thread1 then
+				task.cancel(thread1)
+			end
 			task.cancel(thread0)
 			attachment:Destroy()
 		end
@@ -574,7 +576,6 @@ function Utilities:LoopingSounds(Muzzle: Types.WeaponMuzzle, start: boolean)
 		local DistanceFromCamera = (
 			CurrentCamera.CFrame.Position - Muzzle.WorldPosition
 		).Magnitude
-		print(DistanceFromCamera)
 
 		local sound: Sound? = nil
 		local soundsFolder: Folder?, sounds2Folder: Folder?
