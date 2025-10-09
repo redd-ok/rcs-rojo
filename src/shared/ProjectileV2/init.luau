@@ -6,6 +6,8 @@ local Modules = Engine.Modules
 
 local Utilities = require(Modules:WaitForChild("Utilities"))
 local MultiThread = require(Modules:WaitForChild("MultiThread"))
+local Suppression = require(Modules:WaitForChild("Supression"))
+
 local ProjectileClass = require(script:WaitForChild("projectile"))
 export type Projectile = ProjectileClass.Projectile
 
@@ -82,8 +84,8 @@ Projectile.MultiThread =
 				data.velocity
 			)
 		end,
-		suppress = function(...)
-			_G.Suppress(...)
+		suppress = function(intensity: number, origin: Vector3)
+			Suppression:Supress(intensity, origin)
 		end,
 	})
 Projectile.MultiThread:AllocateActors(Config.ProjectileActorAllocation)

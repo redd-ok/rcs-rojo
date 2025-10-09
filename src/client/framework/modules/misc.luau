@@ -12,6 +12,7 @@ local FX = Engine:WaitForChild("FX")
 
 local Utilities = require(Modules:WaitForChild("Utilities"))
 local ProjectileV2 = require(Modules:WaitForChild("ProjectileV2"))
+local Stance = require(Modules:WaitForChild("Stance"))
 
 local States = require(script.Parent.states)
 local Springs = require(script.Parent.springs)
@@ -90,13 +91,18 @@ local function LoopingSounds(start, isSemi: boolean)
 end
 
 local function UpdateServerStance()
-	task.spawn(
-		_G.StanceUpdate,
-		States.characterState.Stance,
-		States.characterState.LeaningState,
-		States.gunState and States.gunState.GunStance or nil,
-		States.characterState.Running
-	)
+	if not LocalPlayer.Character then
+		return
+	end
+	task.spawn(function()
+		Stance:AnimateCharacterStance(
+			LocalPlayer.Character,
+			States.characterState.Stance,
+			States.characterState.LeaningState,
+			States.characterState.Running,
+			States.gunState and States.gunState.GunStance or nil
+		)
+	end)
 
 	ClientNetwork.CharacterEvents.Stance_CTS.fire({
 		characterStance = States.characterState.Stance,
