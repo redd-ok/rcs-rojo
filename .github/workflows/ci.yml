@@ -20,7 +20,9 @@ jobs:
         run: mkdir src/network
 
       - name: Install Rokit
-        run: curl -sSf https://raw.githubusercontent.com/rojo-rbx/rokit/main/scripts/install.sh | bash
+        run: |
+            curl -sSf https://raw.githubusercontent.com/rojo-rbx/rokit/main/scripts/install.sh | bash
+            echo "$HOME/.rokit/bin" >> $GITHUB_PATH
 
       - name: Install toolings
         run: rokit install --no-trust-check
