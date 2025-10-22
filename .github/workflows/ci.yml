@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create folder for network code
+        run: mkdir src/network
+
+      - name: Install Rokit
+        run: curl -sSf https://raw.githubusercontent.com/rojo-rbx/rokit/main/scripts/install.sh | bash
+
+      - name: Install toolings
+        run: rokit install --no-trust-check
+
+      - name: Generate network code
+        run: blink main
+
+      - name: Build .rbxl
+        run: rojo build rcs.rbxl
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          path: rcs.rbxl
