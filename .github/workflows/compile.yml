@@ -1,6 +1,8 @@
 name: Build & Release
 env:
   GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+permissions:
+  contents: write
 
 on:
   workflow_dispatch:
@@ -12,10 +14,6 @@ on:
         description: 'Is this a pre-release? (true/false)'
         required: true
         default: 'true'
-      description:
-        description: 'Release description'
-        required: false
-        default: ''
 
 jobs:
   build:
@@ -62,5 +60,6 @@ jobs:
           body: ${{ github.event.inputs.description }}
           prerelease: ${{ github.event.inputs.prerelease }}
           files: build/rcs.rbxl
+          draft: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
