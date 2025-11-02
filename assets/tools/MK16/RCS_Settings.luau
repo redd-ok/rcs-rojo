@@ -26,9 +26,9 @@ self.Aimparts = {
 }
 
 self.Ammo = 30
-self.StoredAmmo = 90
+self.StoredAmmo = 240
 self.AmmoInGun = self.Ammo
-self.MaxStoredAmmo = 210
+self.MaxStoredAmmo = 240
 self.CanCheckMag = true
 self.MagCount = true
 self.ShellInsert = false

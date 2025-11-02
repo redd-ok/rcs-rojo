@@ -1,4 +1,7 @@
-local Engine = game:GetService("ReplicatedStorage").RCS
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+
+local Engine = ReplicatedStorage.RCS
 
 local Config = require(Engine.RCS_Config)
 
@@ -6,7 +9,10 @@ local Modules = Engine.Modules
 
 local Utilities = require(Modules:WaitForChild("Utilities"))
 local MultiThread = require(Modules:WaitForChild("MultiThread"))
-local Suppression = require(Modules:WaitForChild("Supression"))
+local Suppression
+if RunService:IsClient() then
+	Suppression = require(Modules:WaitForChild("Supression"))
+end
 
 local ProjectileClass = require(script:WaitForChild("projectile"))
 export type Projectile = ProjectileClass.Projectile
@@ -88,7 +94,12 @@ Projectile.MultiThread =
 			Suppression:Supress(intensity, origin)
 		end,
 	})
-Projectile.MultiThread:AllocateActors(Config.ProjectileActorAllocation)
+if
+	RunService:IsServer() and Config.ServersideProjectiles
+	or RunService:IsClient()
+then
+	Projectile.MultiThread:AllocateActors(Config.ProjectileActorAllocation)
+end
 
 function Projectile:GetId()
 	Projectile._counter += 1

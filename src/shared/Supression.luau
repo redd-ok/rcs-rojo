@@ -33,17 +33,17 @@ function Suppression:Supress(intensity: number, origin: Vector3)
 
 		CurrentCamera.CFrame *= CFrame.Angles(
 			0,
-			(-a.Y / 100) * Config.Suppression.CameraShakeKick,
+			(-a.Y / 50) * Config.Suppression.CameraShakeKick,
 			0
 		) * CFrame.Angles(
-			(-a.X / 100) * Config.Suppression.CameraShakeKick,
+			(-a.X / 50) * Config.Suppression.CameraShakeKick,
 			0,
 			0
 		)
 
-		Suppression.Spring.a = (-a / 7) * Config.Suppression.CameraShakeKick
+		Suppression.Spring.a = (-a / 14) * Config.Suppression.CameraShakeKick
 		task.delay(0.1, function()
-			Suppression.Spring.a = (a / 7) * Config.Suppression.CameraShakeKick
+			Suppression.Spring.a = (a / 14) * Config.Suppression.CameraShakeKick
 		end)
 	end
 
